@@ -91,25 +91,25 @@ class ChessBot3:
         return best_move
 
     def __alpha_beta_minimax_helper(self, board, depth=3, alpha=float('-inf'), beta=float('inf'), is_maximizing=True):
-        if depth == 0 or board.is_game_over() or time.time():
+        if depth == 0 or board.is_game_over():
             return self.evaluate_board(board, depth)
         
-        best_eval = float('-inf') if is_maximizing else float('inf')
         legal_moves = list(board.legal_moves)
         legal_moves.sort(key=self.get_move_history_score, reverse=True)
+
+        best_eval = float('-inf') if is_maximizing else float('inf')
         for move in legal_moves:
             board.push(move)
             eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, not is_maximizing)
             board.pop()
+
             best_eval = max(best_eval, eval) if is_maximizing else min(best_eval, eval)
 
             if is_maximizing: alpha = max(alpha, eval)
             else: beta = min(beta, eval)
-
             if beta <= alpha:
                 self.update_history_score(move, self.depth - depth)
                 break
-
         return best_eval
 
     def evaluate_board(self, board, depth): 
@@ -153,7 +153,7 @@ class ChessBot3:
         num_pieces = len(board.piece_map()) 
         return (not has_queens and num_pieces < 15) or num_pieces < 12
     
-    # TODO: Remove time limit, it doesn't work without iterative deepening
     # TODO: Endgames aren't working properly => Increase depth
+    # TODO: It didn't take a free rook for some reason, it also didn't see that the rook was for hanging (there might be a small mistake somewhere)
     # TODO: Add previous calcs. memoization
     # TODO: After adding memoization, add iterative deepening
