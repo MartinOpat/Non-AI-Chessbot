@@ -1,3 +1,11 @@
+import chess
+import chess.svg
+import chess.pgn
+
+import numpy as np
+import time
+
+from tables import *
 from bisect import insort
 
 def preprocess_openings(file_path):
@@ -24,16 +32,23 @@ def preprocess_openings(file_path):
     return fen_to_best_move
 
 class ChessBot3:
-    def __init__(self, depth=2):
+    def __init__(self, depth=2, time_limit=10):
         self.depth = depth
+        self.time_limit = time_limit
+        self.start_time = 0
         
-        self.prev_moves = {}  # TODO: Right ow it only stores depth 3 (ideal at self.depth=4). Implement storing of more depths fore self.depth > 4
+        self.history_table = np.zeros((64, 64), dtype=np.int32)  # History scores for each possible move
         
-        self.fen_to_best_move = preprocess_openings('openings_filtered.pgn')
+        self.fen_to_best_move = preprocess_openings('src/chessbot/openings_filtered.pgn')
         self.is_opening = True
 
+    def update_history_score(self, move, depth):
+        self.history_table[move.from_square][move.to_square] += depth ** 2
+
+    def get_move_history_score(self, move):
+        return self.history_table[move.from_square][move.to_square]
+    
     def get_best_move(self, board):
-        # Make it smarter than just this
         if self.is_opening:
             if board.fen() in self.fen_to_best_move:
                 if board.turn == chess.WHITE:
@@ -43,24 +58,17 @@ class ChessBot3:
                 return best_move
             self.is_opening = False
 
+        # TODO: Make it smarter than just this
+        self.start_time = time.time()
         if self.is_endgame(board):
             best_move = self.select_move(board, depth=self.depth+1, is_maximizing=board.turn == chess.WHITE)
         else:
             best_move = self.select_move(board, depth=self.depth, is_maximizing=board.turn == chess.WHITE)
         return best_move
 
-    def make_move(self, board):
-        best_move = self.get_best_move(board)
-        board.push(best_move)
-
     def select_move(self, board, depth=2, alpha=float('-inf'), beta=float('inf'), is_maximizing=True):
-        if depth == 3:
-            self.prev_moves = {}
-
         legal_moves = list(board.legal_moves)
-        if depth == self.depth:
-            self.prev_moves = {key: value for key, value in self.prev_moves.items() if key in board.legal_moves}
-            legal_moves.sort(key=lambda x: self.prev_moves.get(x, 0), reverse=is_maximizing)
+        legal_moves.sort(key=self.get_move_history_score, reverse=True)
 
         if is_maximizing:
             max_eval = float('-inf')
@@ -76,6 +84,7 @@ class ChessBot3:
                     best_move = move
                 alpha = max(alpha, eval)
                 if beta <= alpha:  # TODO: should this be the condition for both case ?
+                    self.update_history_score(move, self.depth - depth)
                     break
             return best_move
         else:
@@ -91,11 +100,12 @@ class ChessBot3:
                     best_move = move
                 beta = min(beta, eval)
                 if beta <= alpha:
+                    self.update_history_score(move, self.depth - depth)
                     break
             return best_move
 
     def __alpha_beta_minimax_helper(self, board, depth=3, alpha=float('-inf'), beta=float('inf'), is_maximizing=True):
-        if depth == 0 or board.is_game_over():
+        if depth == 0 or board.is_game_over() or time.time() - self.start_time > self.time_limit:
             return self.evaluate_board(board, depth)
 
         if is_maximizing:
@@ -130,7 +140,7 @@ class ChessBot3:
             else:
                 return 1e6 + depth
         if board.is_stalemate() or board.is_insufficient_material() or board.is_fifty_moves() or board.is_repetition(3):
-            0
+            return 0
 
         # Material values
         piece_square_tables = {
@@ -162,5 +172,7 @@ class ChessBot3:
         num_pieces = len(board.piece_map()) 
         return (not has_queens and num_pieces < 15) or num_pieces < 12
     
+    # TODO: Remove time limit, it doesn't work without iterative deepening
     # TODO: Endgames aren't working properly => Increase depth
-    # TODO: 1. e3 Nc6 2. Nf3 e6 3. Nd4 Nxd4 4. Bb5 Qg5 5. Bc4 Bb4 6. exd4 Ba3 *  --> Depth 5, the hell happened here
+    # TODO: Add previous calcs. memoization
+    # TODO: After adding memoization, add iterative deepening
