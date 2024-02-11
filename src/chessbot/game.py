@@ -43,7 +43,7 @@ mw.show()
 QApplication.processEvents()
 
 # MAKE SURE DEPTH IS EVEN, OTHERWISE BAD THINGS HAPPEN
-whiteBot = ChessBot3(depth=4)
+whiteBot = ChessBot3(depth=6)
 blackBot = ChessBot2(depth=4)
 
 white_time = 0
