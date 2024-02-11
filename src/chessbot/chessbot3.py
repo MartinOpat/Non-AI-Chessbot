@@ -69,39 +69,26 @@ class ChessBot3:
         legal_moves = list(board.legal_moves)
         legal_moves.sort(key=self.get_move_history_score, reverse=True)
 
-        if is_maximizing:
-            max_eval = float('-inf')
-            best_move = None
-            for move in legal_moves:
-                board.push(move)
-                eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, False)
-                board.pop()
-                if depth == 3:
-                    self.prev_moves[move] = eval
-                if eval > max_eval:
-                    max_eval = eval
-                    best_move = move
-                alpha = max(alpha, eval)
-                if beta <= alpha:  # TODO: should this be the condition for both case ?
+        best_eval = float('-inf') if is_maximizing else float('inf')
+        best_move = None
+        for move in legal_moves:
+            board.push(move)
+            eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, not is_maximizing)
+            board.pop()
+
+            if is_maximizing and eval > best_eval:
+                best_eval = eval
+                best_move = move
+            if not is_maximizing and eval < best_eval:
+                best_eval = eval
+                best_move = move
+
+            if is_maximizing: alpha = max(alpha, eval)
+            else: beta = min(beta, eval)
+            if beta <= alpha:  
                     self.update_history_score(move, self.depth - depth)
                     break
-            return best_move
-        else:
-            min_eval = float('inf')
-            for move in legal_moves:
-                board.push(move)
-                eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, True)
-                board.pop()
-                if depth == 3:
-                    self.prev_moves[move] = eval
-                if eval < min_eval:
-                    min_eval = eval
-                    best_move = move
-                beta = min(beta, eval)
-                if beta <= alpha:
-                    self.update_history_score(move, self.depth - depth)
-                    break
-            return best_move
+        return best_move
 
     def __alpha_beta_minimax_helper(self, board, depth=3, alpha=float('-inf'), beta=float('inf'), is_maximizing=True):
         if depth == 0 or board.is_game_over() or time.time():
@@ -112,7 +99,7 @@ class ChessBot3:
         legal_moves.sort(key=self.get_move_history_score, reverse=True)
         for move in legal_moves:
             board.push(move)
-            eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, False)
+            eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, not is_maximizing)
             board.pop()
             best_eval = max(best_eval, eval) if is_maximizing else min(best_eval, eval)
 
