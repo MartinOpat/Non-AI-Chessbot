@@ -59,7 +59,6 @@ class ChessBot3:
             self.is_opening = False
 
         # TODO: Make it smarter than just this
-        self.start_time = time.time()
         if self.is_endgame(board):
             best_move = self.select_move(board, depth=self.depth+1, is_maximizing=board.turn == chess.WHITE)
         else:
@@ -105,31 +104,26 @@ class ChessBot3:
             return best_move
 
     def __alpha_beta_minimax_helper(self, board, depth=3, alpha=float('-inf'), beta=float('inf'), is_maximizing=True):
-        if depth == 0 or board.is_game_over() or time.time() - self.start_time > self.time_limit:
+        if depth == 0 or board.is_game_over() or time.time():
             return self.evaluate_board(board, depth)
+        
+        best_eval = float('-inf') if is_maximizing else float('inf')
+        legal_moves = list(board.legal_moves)
+        legal_moves.sort(key=self.get_move_history_score, reverse=True)
+        for move in legal_moves:
+            board.push(move)
+            eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, False)
+            board.pop()
+            best_eval = max(best_eval, eval) if is_maximizing else min(best_eval, eval)
 
-        if is_maximizing:
-            max_eval = float('-inf')
-            for move in board.legal_moves:
-                board.push(move)
-                eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, False)
-                board.pop()
-                max_eval = max(max_eval, eval)
-                alpha = max(alpha, eval)
-                if beta <= alpha:  # TODO: should this be the condition for both case ?
-                    break
-            return max_eval
-        else:
-            min_eval = float('inf')
-            for move in board.legal_moves:
-                board.push(move)
-                eval = self.__alpha_beta_minimax_helper(board, depth - 1, alpha, beta, True)
-                board.pop()
-                min_eval = min(min_eval, eval)
-                beta = min(beta, eval)
-                if beta <= alpha:
-                    break
-            return min_eval
+            if is_maximizing: alpha = max(alpha, eval)
+            else: beta = min(beta, eval)
+
+            if beta <= alpha:
+                self.update_history_score(move, self.depth - depth)
+                break
+
+        return best_eval
 
     def evaluate_board(self, board, depth): 
         global piece_values
