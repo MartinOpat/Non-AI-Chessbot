@@ -1,5 +1,5 @@
-#ifndef CHESSBOT3_H
-#define CHESSBOT3_H
+#ifndef CHESSBOT4_H
+#define CHESSBOT4_H
 
 #include <vector>
 #include <map>
@@ -92,4 +92,4 @@ const std::vector<std::vector<int>> KINGS_TABLE_ENDGAME = {
     {-50, -30, -30, -30, -30, -30, -30, -50}
 };
 
-#endif // CHESSBOT3_H
+#endif // CHESSBOT4_H

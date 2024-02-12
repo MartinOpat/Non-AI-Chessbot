@@ -95,15 +95,15 @@ public:
     }
 
     void update_history_score(chess::Move move, int depth) {
-        history_table[move.from().index()][move.to().index()] += depth * depth;
+        this->history_table[move.from().index()][move.to().index()] += depth * depth;  // TODO: Make sure this doesn't overflow
     }
 
     int get_move_history_score(chess::Move move) {
-        return history_table[move.from().index()][move.to().index()];
+        return this->history_table[move.from().index()][move.to().index()];
     }
 
     const char* get_best_move(chess::Board board) {
-        if (is_opening) {
+        if (this->is_opening) {
             if (fen_to_best_move.count(board.getFen())) {
                 chess::Move move;
                 if (board.sideToMove() == chess::Color::WHITE) {
@@ -116,14 +116,14 @@ public:
                 std::strcpy(cstr, temp.c_str());
                 return cstr;
             }
-            is_opening = false;
+            this->is_opening = false;
         }
 
         chess::Move best_move;
         if (is_endgame(board)) {
-            best_move = select_move(board, depth + 1, INT_MIN, INT_MAX, board.sideToMove() == chess::Color::WHITE);
-        } else {
-            best_move = select_move(board, depth,  INT_MIN, INT_MAX, board.sideToMove() == chess::Color::WHITE);
+            best_move = select_move(board, this->depth + 1, INT_MIN, INT_MAX, (board.sideToMove() == chess::Color::WHITE));
+        } else { 
+            best_move = select_move(board, this->depth,  INT_MIN, INT_MAX, (board.sideToMove() == chess::Color::WHITE));
         }
         std::string temp = moveToString(best_move);
         char* cstr = new char[temp.length() + 1];
@@ -131,7 +131,7 @@ public:
         return cstr;
     }
 
-    chess::Move select_move(chess::Board board, int depth = 2, float alpha=INT_MIN, float beta=INT_MAX, bool is_maximizing = true) {
+    chess::Move select_move(chess::Board& board, int depth = 2, int alpha=INT_MIN, int beta=INT_MAX, bool is_maximizing = true) {
         chess::Movelist legal_moves;
         chess::movegen::legalmoves(legal_moves, board);
 
@@ -165,7 +165,7 @@ public:
         return best_move;
     }
 
-    int alpha_beta_minimax_helper(chess::Board board, int depth, int alpha = INT_MIN, int beta = INT_MAX, bool is_maximizing = true) {
+    int alpha_beta_minimax_helper(chess::Board& board, int depth, int alpha = INT_MIN, int beta = INT_MAX, bool is_maximizing = true) {
         if (depth == 0 or board.isGameOver().first != chess::GameResultReason::NONE) {
             return evaluate_board(board, depth);
         }
@@ -183,11 +183,11 @@ public:
             board.unmakeMove(move);
 
             if (is_maximizing) {
-                best_eval = std::max(best_eval, eval);
-                alpha = std::max(alpha, eval);
+                best_eval = MAX(best_eval, eval);
+                alpha = MAX(alpha, eval);
             } else {
-                best_eval = std::min(best_eval, eval);
-                beta = std::min(beta, eval);
+                best_eval = MIN(best_eval, eval);
+                beta = MIN(beta, eval);
             }
 
             if (beta <= alpha) {
