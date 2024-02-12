@@ -11,6 +11,7 @@ sys.setrecursionlimit(10**9)
 
 from chessbot2 import ChessBot2
 from chessbot3 import ChessBot3
+from ..chessbot_cpp.cppChessbot import Chessbot4
 
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtWidgets import QApplication, QWidget
@@ -43,8 +44,8 @@ mw.show()
 QApplication.processEvents()
 
 # MAKE SURE DEPTH IS EVEN, OTHERWISE BAD THINGS HAPPEN
-whiteBot = ChessBot3(depth=6)
-blackBot = ChessBot2(depth=4)
+whiteBot = ChessBot3(depth=4)
+blackBot = Chessbot4(depth=4)
 
 white_time = 0
 black_time = 0

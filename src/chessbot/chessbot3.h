@@ -5,22 +5,22 @@
 #include <map>
 #include "chess-library/include/chess.hpp"
 
-class ChessBot3 {
-    int depth;
-    int timeLimit;
-    std::vector<std::vector<int>> historyTable; // For move ordering
-    std::map<std::string, std::vector<std::pair<int, chess::Move>>> fenToBestMove; // Preprocessed openings
-    bool isOpening;
+// class ChessBot3 {
+//     int depth;
+//     int timeLimit;
+//     std::vector<std::vector<int>> historyTable; // For move ordering
+//     std::map<std::string, std::vector<std::pair<int, chess::Move>>> fenToBestMove; // Preprocessed openings
+//     bool isOpening;
 
-public:
-    ChessBot3(int depth = 2, int timeLimit = 10);
-    void updateHistoryScore(const chess::Move& move, int depth);
-    int getMoveHistoryScore(const chess::Move& move) const;
-    chess::Move getBestMove(const chess::Board& board);
-    chess::Move selectMove(chess::Board& board, int depth, bool isMaximizing);
-    int evaluateBoard(const chess::Board& board);
-    bool isEndgame(const chess::Board& board);
-};
+// public:
+//     ChessBot3(int depth = 2, int timeLimit = 10);
+//     void update_history_score(const chess::Move& move, int depth);
+//     int get_move_history_score(const chess::Move& move) const;
+//     std::string get_best_move(const chess::Board& board);
+//     chess::Move select_move(chess::Board& board, int depth, bool isMaximizing);
+//     int evaluate_board(const chess::Board& board);
+//     bool is_endgame(const chess::Board& board);
+// };
 
 std::map<chess::PieceType, int> PIECE_VALUES = {
             {chess::PieceType::PAWN, 100},

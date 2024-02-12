@@ -3,9 +3,9 @@
 #include <unordered_map>
 #include <string>
 #include <fstream>
+#include <climits>
 
 #include "chessbot3.h"
-#include <climits>
 
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -80,7 +80,7 @@ private:
     bool is_opening;
 
 public:
-    ChessBot3(int depth = 2, int time_limit = 10) : depth(depth), time_limit(time_limit), start_time(0), is_opening(true) {
+    ChessBot3(int depth, int time_limit = 10) : depth(depth), time_limit(time_limit), start_time(0), is_opening(true) {
         history_table.resize(64, std::vector<int>(64, 0));
         fen_to_best_move = preprocessOpenings("src/chessbot/openings_filtered.pgn");
     }
@@ -93,13 +93,15 @@ public:
         return history_table[move.from().index()][move.to().index()];
     }
 
-    chess::Move get_best_move(chess::Board board) {
+    std::string get_best_move(chess::Board board) {
         if (is_opening) {
             if (fen_to_best_move.count(board.getFen())) {
                 if (board.sideToMove() == chess::Color::WHITE) {
-                    return fen_to_best_move[board.getFen()].back().move;
+                    chess::Move move = fen_to_best_move[board.getFen()].back().move;
+                    return move.from() + move.to();
                 } else {
-                    return fen_to_best_move[board.getFen()].front().move;
+                    chess::Move move = fen_to_best_move[board.getFen()].front().move;
+                    return move.from() + move.to();
                 }
             }
             is_opening = false;
@@ -111,7 +113,8 @@ public:
         } else {
             best_move = select_move(board, depth, board.sideToMove() == chess::Color::WHITE);
         }
-        return best_move;
+        chess::Square from = best_move.from(), to = best_move.to();
+        return from + to;
     }
 
     chess::Move select_move(chess::Board board, int depth = 2, float alpha=INT_MIN, float beta=INT_MAX, bool is_maximizing = true) {
@@ -208,31 +211,45 @@ public:
             for (const auto& color : {chess::Color::WHITE, chess::Color::BLACK}) {
                 int sign = color == chess::Color::WHITE ? 1 : -1;
                 auto pieces = board.pieces(piece_type, color);
-                int material_value = value * pieces.size();
+                int material_value = value * pieces.count();
                 int positional_value = 0;
-                for (const auto& square : pieces) {
+                
+                chess::Bitboard copy = pieces;
+                while (copy) {
+                    uint8_t pos = copy.lsb();
+                    int row = pos/8;
+                    int col = pos%8;
+                    (void)copy.pop();
+
                     if (color == chess::Color::WHITE) {
-                        positional_value += piece_square_tables[piece_type][square];
+                        positional_value += piece_square_tables[piece_type][row][col];
                     } else {
-                        positional_value += piece_square_tables[piece_type][chess::squareMirror(square)];
+                        positional_value += piece_square_tables[piece_type][7-row][7-col];
                     }
+                    board_value += sign * (material_value + positional_value);
                 }
-                board_value += sign * (material_value + positional_value);
             }
         }
         return board_value;
     }
 
     bool is_endgame(chess::Board board) {
-        bool has_queens = false;
-        for (const auto& [square, piece] : board.getPieceMap()) {
-            if (piece.getType() == chess::QUEEN) {
-                has_queens = true;
-                break;
-            }
-        }
-        int num_pieces = board.getPieceMap().size();
+        chess::Bitboard queens = board.pieces(chess::PieceType::QUEEN);
+        bool has_queens = !queens.empty();
+        int num_pieces = board.occ().count();
         return (!has_queens && num_pieces < 15) || num_pieces < 12;
     }
 };
 
+extern "C" ChessBot3* new_chessbot(int depth) {
+    return new ChessBot3(depth);
+}
+
+extern "C" void delete_chessbot(ChessBot3* bot) {
+    delete bot;
+}
+
+extern "C" std::string get_best_move(ChessBot3* bot, std::string board_fen) {
+    chess::Board board(board_fen);
+    return bot->get_best_move(board);
+}
