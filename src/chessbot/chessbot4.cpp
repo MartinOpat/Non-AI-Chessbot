@@ -2,10 +2,11 @@
 
 #include <unordered_map>
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <climits>
 
-#include "chessbot3.h"
+#include "chessbot4.h"
 
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -46,9 +47,10 @@ std::map<std::string, std::vector<ScoreMovePair>> preprocessOpenings(const std::
         std::string moveSan;
         while (movesStream >> moveSan) {
             chess::Move move = chess::uci::parseSan(board, moveSan); // Assuming parseSan is a method to parse SAN move notation
-            board.makeMove(move); // Assuming makeMove applies a move to the board
 
             std::string fen = board.getFen(); // Assuming toFen generates a FEN string for the board state
+            board.makeMove(move); // Assuming makeMove applies a move to the board
+
             ScoreMovePair pair(score, move);
             auto& movesList = fenToBestMove[fen];
             if (movesList.empty() || std::find_if(movesList.begin(), movesList.end(), [&pair](const ScoreMovePair& existingPair) {
@@ -60,14 +62,21 @@ std::map<std::string, std::vector<ScoreMovePair>> preprocessOpenings(const std::
             // This might need adjustment depending on how your chess library handles move equality and sorting
         }
 
-        // Sorting each vector of moves by score after all moves are inserted
-        for (auto& [fen, pairs] : fenToBestMove) {
-            std::sort(pairs.begin(), pairs.end(), compareScoreMovePairs);
-        }
+    }
+    // Sorting each vector of moves by score after all moves are inserted
+    for (auto& [fen, pairs] : fenToBestMove) {
+        std::sort(pairs.begin(), pairs.end(), compareScoreMovePairs);
     }
 
     file.close();
     return fenToBestMove;
+}
+
+// Function to convert Move to std::string
+std::string moveToString(const chess::Move& move) {
+    std::ostringstream oss;
+    oss << move; // Use the overloaded operator<<
+    return oss.str(); // Convert the contents of the stream into a string
 }
 
 class ChessBot3 {
@@ -76,13 +85,13 @@ private:
     int time_limit;
     int start_time;
     std::vector<std::vector<int>> history_table;
-    std::map<std::string, std::vector<ScoreMovePair>> fen_to_best_move;
     bool is_opening;
 
 public:
+    std::map<std::string, std::vector<ScoreMovePair>> fen_to_best_move;
     ChessBot3(int depth, int time_limit = 10) : depth(depth), time_limit(time_limit), start_time(0), is_opening(true) {
         history_table.resize(64, std::vector<int>(64, 0));
-        fen_to_best_move = preprocessOpenings("src/chessbot/openings_filtered.pgn");
+        fen_to_best_move = preprocessOpenings("openings_filtered.pgn");
     }
 
     void update_history_score(chess::Move move, int depth) {
@@ -93,28 +102,33 @@ public:
         return history_table[move.from().index()][move.to().index()];
     }
 
-    std::string get_best_move(chess::Board board) {
+    const char* get_best_move(chess::Board board) {
         if (is_opening) {
             if (fen_to_best_move.count(board.getFen())) {
+                chess::Move move;
                 if (board.sideToMove() == chess::Color::WHITE) {
-                    chess::Move move = fen_to_best_move[board.getFen()].back().move;
-                    return move.from() + move.to();
+                    move = fen_to_best_move[board.getFen()].back().move;
                 } else {
-                    chess::Move move = fen_to_best_move[board.getFen()].front().move;
-                    return move.from() + move.to();
+                    move = fen_to_best_move[board.getFen()].front().move;
                 }
+                std::string temp = moveToString(move);
+                char* cstr = new char[temp.length() + 1];
+                std::strcpy(cstr, temp.c_str());
+                return cstr;
             }
             is_opening = false;
         }
 
         chess::Move best_move;
         if (is_endgame(board)) {
-            best_move = select_move(board, depth + 1, board.sideToMove() == chess::Color::WHITE);
+            best_move = select_move(board, depth + 1, INT_MIN, INT_MAX, board.sideToMove() == chess::Color::WHITE);
         } else {
-            best_move = select_move(board, depth, board.sideToMove() == chess::Color::WHITE);
+            best_move = select_move(board, depth,  INT_MIN, INT_MAX, board.sideToMove() == chess::Color::WHITE);
         }
-        chess::Square from = best_move.from(), to = best_move.to();
-        return from + to;
+        std::string temp = moveToString(best_move);
+        char* cstr = new char[temp.length() + 1];
+        std::strcpy(cstr, temp.c_str());
+        return cstr;
     }
 
     chess::Move select_move(chess::Board board, int depth = 2, float alpha=INT_MIN, float beta=INT_MAX, bool is_maximizing = true) {
@@ -129,7 +143,7 @@ public:
         chess::Move best_move;
         for (const auto& move : legal_moves) {
             board.makeMove(move);
-            int eval = alpha_beta_minimax_helper(board, depth - 1, alpha, beta, not is_maximizing);
+            int eval = alpha_beta_minimax_helper(board, depth - 1, alpha, beta, !is_maximizing);
             board.unmakeMove(move);
 
             if ((is_maximizing && eval > best_eval) || (!is_maximizing && eval < best_eval)) {
@@ -144,14 +158,14 @@ public:
             }
 
             if (beta <= alpha) {
-                update_history_score(move, depth - this->depth);
+                update_history_score(move, this->depth - depth);
                 break;
             }
         }
         return best_move;
     }
 
-    int alpha_beta_minimax_helper(chess::Board board, int depth = 3, int alpha = INT_MIN, int beta = INT_MAX, bool is_maximizing = true) {
+    int alpha_beta_minimax_helper(chess::Board board, int depth, int alpha = INT_MIN, int beta = INT_MAX, bool is_maximizing = true) {
         if (depth == 0 or board.isGameOver().first != chess::GameResultReason::NONE) {
             return evaluate_board(board, depth);
         }
@@ -177,7 +191,7 @@ public:
             }
 
             if (beta <= alpha) {
-                update_history_score(move, depth - this->depth);
+                update_history_score(move, this->depth - depth);
                 break;
             }
         }
@@ -187,7 +201,6 @@ public:
     int evaluate_board(chess::Board board, int depth) {
         auto temp = board.isGameOver();
         chess::GameResultReason grr = temp.first;
-        chess::GameResult gres = temp.second;
         if (grr == chess::GameResultReason::CHECKMATE) {
             if (board.sideToMove() == chess::Color::WHITE) return -1000000;  // TODO: Check if this is correct
             else return 1000000;
@@ -201,9 +214,9 @@ public:
         };
 
         if (is_endgame(board)) {
-            piece_square_tables.insert({chess::PieceType::KING, KINGS_TABLE_OPENING});
-        } else {
             piece_square_tables.insert({chess::PieceType::KING, KINGS_TABLE_ENDGAME});
+        } else {
+            piece_square_tables.insert({chess::PieceType::KING, KINGS_TABLE_OPENING});
         }
 
         int board_value = 0;
@@ -226,8 +239,8 @@ public:
                     } else {
                         positional_value += piece_square_tables[piece_type][7-row][7-col];
                     }
-                    board_value += sign * (material_value + positional_value);
                 }
+                board_value += sign * (material_value + positional_value);
             }
         }
         return board_value;
@@ -249,7 +262,25 @@ extern "C" void delete_chessbot(ChessBot3* bot) {
     delete bot;
 }
 
-extern "C" std::string get_best_move(ChessBot3* bot, std::string board_fen) {
+extern "C" const char* get_best_move(ChessBot3* bot, const char* board_fen) {
     chess::Board board(board_fen);
     return bot->get_best_move(board);
 }
+
+extern "C" void free_allocated_memory(char* ptr) {
+    delete[] ptr;
+}
+
+
+int main() {
+    ChessBot3* bot = new_chessbot(4);
+    const char* board_fen = "r4bQ1/pppk1N2/6p1/3K4/2B3q1/2BR4/P6P/8 b - - 5 24";
+    const char* best_move = get_best_move(bot, board_fen);
+    std::cout << "Best move: " << best_move << std::endl;
+    free_allocated_memory(const_cast<char*>(best_move));
+    delete_chessbot(bot);
+    return 0;
+}
+
+
+// b3d2 in 8/ppN4p/4Q3/2p1pkp1/4p3/8/PPP1N1PP/1K1R1B1R b - - 6 26

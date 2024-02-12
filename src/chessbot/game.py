@@ -11,7 +11,7 @@ sys.setrecursionlimit(10**9)
 
 from chessbot2 import ChessBot2
 from chessbot3 import ChessBot3
-from ..chessbot_cpp.cppChessbot import Chessbot4
+from cppChessbot import ChessBot4
 
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtWidgets import QApplication, QWidget
@@ -45,7 +45,7 @@ QApplication.processEvents()
 
 # MAKE SURE DEPTH IS EVEN, OTHERWISE BAD THINGS HAPPEN
 whiteBot = ChessBot3(depth=4)
-blackBot = Chessbot4(depth=4)
+blackBot = ChessBot4(depth=6)
 
 white_time = 0
 black_time = 0
@@ -60,18 +60,18 @@ while not board.is_game_over():
         white_time += end_time - start_time
         board.push(move)
 
-        print("White's total time:", white_time)
+        print("White's so far time:", white_time)
         mw.update_svg()
         QApplication.processEvents()
 
         # black
         start_time = time.time()
-        move = blackBot.get_best_move(board)
+        move = blackBot.get_best_move(board.fen())
         end_time = time.time()
         black_time += end_time - start_time
-        board.push(move)
+        board.push(chess.Move.from_uci(move))
 
-        print("Black's total time:", black_time)
+        print("Black's so far time:", black_time)
         mw.update_svg()
         QApplication.processEvents()
 
@@ -82,7 +82,6 @@ while not board.is_game_over():
         print("Game ended by lack of patience")
         break
         
-print("HEREEEEE")
 game = chess.pgn.Game()
 game.headers["Event"] = "Self Game"
 game.headers["White"] = "White"
