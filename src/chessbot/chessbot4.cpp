@@ -83,7 +83,7 @@ public:
     std::map<std::string, std::vector<ScoreMovePair>> fen_to_best_move;
     ChessBot3(int depth, int time_limit = 10) : depth(depth), time_limit(time_limit), start_time(0), is_opening(true) {
         history_table.resize(64, std::vector<int>(64, 0));
-        fen_to_best_move = preprocessOpenings("openings_filtered.pgn");
+        fen_to_best_move = preprocessOpenings("better_filtered_openings.pgn");
     }
 
     void update_history_score(const chess::Move& move, int depth) {
@@ -101,7 +101,6 @@ public:
                 if (board.sideToMove() == chess::Color::WHITE) {
                     move = fen_to_best_move[board.getFen()].back().move;
                 } else {
-                    std::cout << "HERE" << std::endl;
                     move = fen_to_best_move[board.getFen()].front().move;
                 }
                 std::string temp = moveToString(move);
@@ -114,7 +113,8 @@ public:
 
         chess::Move best_move;
         if (is_endgame(board)) {
-            best_move = select_move(board, this->depth + 1, (board.sideToMove() == chess::Color::WHITE));
+            // TODO: Add some endgame logic here
+            best_move = select_move(board, this->depth, (board.sideToMove() == chess::Color::WHITE));
         } else {
             best_move = select_move(board, this->depth,  (board.sideToMove() == chess::Color::WHITE));
         }
@@ -147,17 +147,20 @@ public:
                 best_move = move;
             }
 
-            if (is_maximizing) {
-                alpha = std::max(alpha, eval);
-            } else {
-                beta = std::min(beta, eval);
-            }
+            // I don't think this is necessary in this function as cut offs can never happen here (atm)
+            // if (is_maximizing) {
+            //     alpha = std::max(alpha, eval);
+            // } else {
+            //     beta = std::min(beta, eval);
+            // }
 
-            if (beta <= alpha) {
-                update_history_score(move, this->depth - depth);
-                break;
-            }
+            // if (beta <= alpha) {
+            //     update_history_score(move, this->depth - depth);
+            //     break;
+            // }
         }
+        // std::cout << best_eval << "; " << board.sideToMove() <<
+        // "; " << is_maximizing << "; " << alpha << ", " << beta << std::endl;
         return best_move;
     }
 
@@ -270,11 +273,24 @@ extern "C" void free_allocated_memory(char* ptr) {
 
 int main() {
     ChessBot3* bot = new_chessbot(4);
-    const char* board_fen = "r1bq1rk1/ppp2pbp/2np1np1/4p3/3PP3/2N1BP2/PPPQN1PP/2KR1B1R b - - 3 8";
+    const char* board_fen = "r6r/1p1bkpp1/pN2p2p/8/8/1PnBPP2/P5PP/R4RK1 b - - 1 18";
     const char* best_move = get_best_move(bot, board_fen);
     std::cout << "Best move: " << best_move << std::endl;
+
+    chess::Board board_played("r7/1p1bkpp1/p3p2p/3n4/4P3/1P1B1P2/P5PP/R4RK1 b - - 0 20");
+    chess::Board board_better("1r5r/1p1Nkpp1/p3p2p/3n4/8/1P1BPP2/P5PP/2R2RK1 b - - 0 20");
+    // ... so you can come to the correct conclusion, huh ??? Then why the hell don't you
+    // ... it wasn't deep enough so you didn't know you can take back ... TODO: probably should special 
+    // case that somehow
+    // TODO: Check if python does this as well
+
+    std::cout << bot->evaluate_board(board_played, 1) << ", " <<
+    bot->evaluate_board(board_better, 1) << std::endl;
+
     free_allocated_memory(const_cast<char*>(best_move));
     delete_chessbot(bot);
+
+
     return 0;
 }
 
@@ -283,3 +299,6 @@ int main() {
 
 // Here we didn't take a draw by repetition (b4b3 instead of g8h8):
 // 4N1k1/5p2/1r1p4/3Pp1p1/8/1p3P1P/1PP3P1/1K2R3 w - - 0 56
+
+// Didn't move rook away
+// r6r/1p1bkpp1/pN2p2p/8/8/1PnBPP2/P5PP/R4RK1 b - - 1 18

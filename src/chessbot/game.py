@@ -45,7 +45,7 @@ QApplication.processEvents()
 
 # MAKE SURE DEPTH IS EVEN, OTHERWISE BAD THINGS HAPPEN
 whiteBot = ChessBot3(depth=4)
-blackBot = ChessBot4(depth=4)
+blackBot = ChessBot4(depth=5)
 
 white_time = 0
 black_time = 0

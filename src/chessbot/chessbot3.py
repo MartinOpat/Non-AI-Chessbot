@@ -40,7 +40,7 @@ class ChessBot3:
         
         self.history_table = np.zeros((64, 64), dtype=np.int32)  # History scores for each possible move
         
-        self.fen_to_best_move = preprocess_openings('openings_filtered.pgn')
+        self.fen_to_best_move = preprocess_openings('better_filtered_openings.pgn')
         self.is_opening = True
 
     def update_history_score(self, move, depth):
