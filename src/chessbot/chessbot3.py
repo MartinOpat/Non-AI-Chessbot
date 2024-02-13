@@ -158,3 +158,11 @@ class ChessBot3:
     # TODO: It didn't take a free rook for some reason, it also didn't see that the rook was for hanging (there might be a small mistake somewhere)
     # TODO: Add previous calcs. memoization
     # TODO: After adding memoization, add iterative deepening
+    # TODO: Here we alloweed a draw by reptition (oponent didin't use it): 4N1k1/5p2/1r1p4/3Pp1p1/8/1p3P1P/1PP3P1/1K2R3 w - - 0 56
+
+
+board = chess.Board()
+board.set_fen("r1bq1rk1/ppp2pbp/2np1np1/4p3/3PP3/2N1BP2/PPPQN1PP/2KR1B1R b - - 3 8")
+
+bot = ChessBot3(depth=4)
+print(bot.get_best_move(board))

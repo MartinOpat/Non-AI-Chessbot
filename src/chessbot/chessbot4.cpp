@@ -9,12 +9,6 @@
 #include "chessbot4.h"
 
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
-
-
-
 struct ScoreMovePair {
     int score;
     chess::Move move; // Assuming Move is a suitable type for your chess library
@@ -54,12 +48,10 @@ std::map<std::string, std::vector<ScoreMovePair>> preprocessOpenings(const std::
             ScoreMovePair pair(score, move);
             auto& movesList = fenToBestMove[fen];
             if (movesList.empty() || std::find_if(movesList.begin(), movesList.end(), [&pair](const ScoreMovePair& existingPair) {
-                return existingPair.move == pair.move; // Assuming Move has an equality operator
-            }) == movesList.end()) {
+                return existingPair.move == pair.move;}) == movesList.end()) {
                 movesList.push_back(pair);
             }
 
-            // This might need adjustment depending on how your chess library handles move equality and sorting
         }
 
     }
@@ -94,21 +86,22 @@ public:
         fen_to_best_move = preprocessOpenings("openings_filtered.pgn");
     }
 
-    void update_history_score(chess::Move move, int depth) {
+    void update_history_score(const chess::Move& move, int depth) {
         this->history_table[move.from().index()][move.to().index()] += depth * depth;  // TODO: Make sure this doesn't overflow
     }
 
-    int get_move_history_score(chess::Move move) {
+    int get_move_history_score(const chess::Move& move) {
         return this->history_table[move.from().index()][move.to().index()];
     }
 
-    const char* get_best_move(chess::Board board) {
+    const char* get_best_move(chess::Board& board) {
         if (this->is_opening) {
             if (fen_to_best_move.count(board.getFen())) {
                 chess::Move move;
                 if (board.sideToMove() == chess::Color::WHITE) {
                     move = fen_to_best_move[board.getFen()].back().move;
                 } else {
+                    std::cout << "HERE" << std::endl;
                     move = fen_to_best_move[board.getFen()].front().move;
                 }
                 std::string temp = moveToString(move);
@@ -121,9 +114,9 @@ public:
 
         chess::Move best_move;
         if (is_endgame(board)) {
-            best_move = select_move(board, this->depth + 1, INT_MIN, INT_MAX, (board.sideToMove() == chess::Color::WHITE));
-        } else { 
-            best_move = select_move(board, this->depth,  INT_MIN, INT_MAX, (board.sideToMove() == chess::Color::WHITE));
+            best_move = select_move(board, this->depth + 1, (board.sideToMove() == chess::Color::WHITE));
+        } else {
+            best_move = select_move(board, this->depth,  (board.sideToMove() == chess::Color::WHITE));
         }
         std::string temp = moveToString(best_move);
         char* cstr = new char[temp.length() + 1];
@@ -131,7 +124,7 @@ public:
         return cstr;
     }
 
-    chess::Move select_move(chess::Board& board, int depth = 2, int alpha=INT_MIN, int beta=INT_MAX, bool is_maximizing = true) {
+    chess::Move select_move(chess::Board& board, int depth, bool is_maximizing) {
         chess::Movelist legal_moves;
         chess::movegen::legalmoves(legal_moves, board);
 
@@ -139,8 +132,11 @@ public:
             return get_move_history_score(a) > get_move_history_score(b);
         });
 
+
         int best_eval = is_maximizing ? INT_MIN : INT_MAX;
         chess::Move best_move;
+        int alpha = INT_MIN;
+        int beta = INT_MAX;
         for (const auto& move : legal_moves) {
             board.makeMove(move);
             int eval = alpha_beta_minimax_helper(board, depth - 1, alpha, beta, !is_maximizing);
@@ -152,9 +148,9 @@ public:
             }
 
             if (is_maximizing) {
-                alpha = MAX(alpha, eval);
+                alpha = std::max(alpha, eval);
             } else {
-                beta = MIN(beta, eval);
+                beta = std::min(beta, eval);
             }
 
             if (beta <= alpha) {
@@ -165,7 +161,7 @@ public:
         return best_move;
     }
 
-    int alpha_beta_minimax_helper(chess::Board& board, int depth, int alpha = INT_MIN, int beta = INT_MAX, bool is_maximizing = true) {
+    int alpha_beta_minimax_helper(chess::Board& board, int depth, int alpha, int beta, bool is_maximizing) {
         if (depth == 0 or board.isGameOver().first != chess::GameResultReason::NONE) {
             return evaluate_board(board, depth);
         }
@@ -183,11 +179,11 @@ public:
             board.unmakeMove(move);
 
             if (is_maximizing) {
-                best_eval = MAX(best_eval, eval);
-                alpha = MAX(alpha, eval);
+                best_eval = std::max(best_eval, eval);
+                alpha = std::max(alpha, eval);
             } else {
-                best_eval = MIN(best_eval, eval);
-                beta = MIN(beta, eval);
+                best_eval = std::min(best_eval, eval);
+                beta = std::min(beta, eval);
             }
 
             if (beta <= alpha) {
@@ -274,7 +270,7 @@ extern "C" void free_allocated_memory(char* ptr) {
 
 int main() {
     ChessBot3* bot = new_chessbot(4);
-    const char* board_fen = "r4bQ1/pppk1N2/6p1/3K4/2B3q1/2BR4/P6P/8 b - - 5 24";
+    const char* board_fen = "r1bq1rk1/ppp2pbp/2np1np1/4p3/3PP3/2N1BP2/PPPQN1PP/2KR1B1R b - - 3 8";
     const char* best_move = get_best_move(bot, board_fen);
     std::cout << "Best move: " << best_move << std::endl;
     free_allocated_memory(const_cast<char*>(best_move));
@@ -282,5 +278,8 @@ int main() {
     return 0;
 }
 
+// Here we let ourselves get forked (b3d2):
+// 8/ppN4p/4Q3/2p1pkp1/4p3/8/PPP1N1PP/1K1R1B1R b - - 6 26
 
-// b3d2 in 8/ppN4p/4Q3/2p1pkp1/4p3/8/PPP1N1PP/1K1R1B1R b - - 6 26
+// Here we didn't take a draw by repetition (b4b3 instead of g8h8):
+// 4N1k1/5p2/1r1p4/3Pp1p1/8/1p3P1P/1PP3P1/1K2R3 w - - 0 56
