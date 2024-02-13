@@ -162,7 +162,7 @@ class ChessBot3:
 
 
 board = chess.Board()
-board.set_fen("r1bq1rk1/ppp2pbp/2np1np1/4p3/3PP3/2N1BP2/PPPQN1PP/2KR1B1R b - - 3 8")
+board.set_fen("r6r/1p1bkpp1/pN2p2p/8/8/1PnBPP2/P5PP/R4RK1 b - - 1 18")
 
 bot = ChessBot3(depth=4)
 print(bot.get_best_move(board))

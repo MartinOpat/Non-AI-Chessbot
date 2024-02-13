@@ -282,7 +282,7 @@ int main() {
     // ... so you can come to the correct conclusion, huh ??? Then why the hell don't you
     // ... it wasn't deep enough so you didn't know you can take back ... TODO: probably should special 
     // case that somehow
-    // TODO: Check if python does this as well
+    // Python does this as well, as the issue really is with the depth.
 
     std::cout << bot->evaluate_board(board_played, 1) << ", " <<
     bot->evaluate_board(board_better, 1) << std::endl;
