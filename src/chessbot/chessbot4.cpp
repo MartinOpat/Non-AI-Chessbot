@@ -203,7 +203,10 @@ public:
         if (grr == chess::GameResultReason::CHECKMATE) {
             if (board.sideToMove() == chess::Color::WHITE) return -1000000;  // TODO: Check if this is correct
             else return 1000000;
-        }
+        } else if (grr == chess::GameResultReason::STALEMATE) {
+            return 0;
+        } 
+        
         std::map<chess::PieceType, const std::vector<std::vector<int>>> piece_square_tables = {
             {chess::PieceType::PAWN, PAWN_TABLE},
             {chess::PieceType::KNIGHT, KNIGHTS_TABLE},
@@ -300,5 +303,5 @@ int main() {
 // Here we didn't take a draw by repetition (b4b3 instead of g8h8):
 // 4N1k1/5p2/1r1p4/3Pp1p1/8/1p3P1P/1PP3P1/1K2R3 w - - 0 56
 
-// Didn't move rook away
+// Didn't move rook away -> Not enough depth
 // r6r/1p1bkpp1/pN2p2p/8/8/1PnBPP2/P5PP/R4RK1 b - - 1 18
