@@ -158,7 +158,7 @@ class ChessBot3:
     # TODO: It didn't take a free rook for some reason, it also didn't see that the rook was for hanging (there might be a small mistake somewhere)
     # TODO: Add previous calcs. memoization
     # TODO: After adding memoization, add iterative deepening
-    # TODO: Here we alloweed a draw by reptition (oponent didin't use it): 4N1k1/5p2/1r1p4/3Pp1p1/8/1p3P1P/1PP3P1/1K2R3 w - - 0 56
+    # TODO: Missed mate in 1: 4Q3/8/8/1Q6/8/4K3/k4P2/8 w - - 3 73    
 
 
 board = chess.Board()

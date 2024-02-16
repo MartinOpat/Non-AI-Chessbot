@@ -165,7 +165,9 @@ public:
     }
 
     int alpha_beta_minimax_helper(chess::Board& board, int depth, int alpha, int beta, bool is_maximizing) {
-        if (depth == 0 or board.isGameOver().first != chess::GameResultReason::NONE) {
+        if (depth == 0) {
+            return quiescence_search(board, alpha, beta, is_maximizing);  // Avoiding horizon effect
+        } else if (board.isGameOver().first != chess::GameResultReason::NONE) {
             return evaluate_board(board, depth);
         }
 
@@ -197,6 +199,35 @@ public:
         return best_eval;
     }
 
+    int quiescence_search(chess::Board& board, int alpha, int beta, bool is_maximizing) {
+        int stand_pat = evaluate_board(board, 0);
+        if (is_maximizing) {
+            if (stand_pat >= beta) return beta;
+            if (alpha < stand_pat) alpha = stand_pat;
+        } else {
+            if (stand_pat <= alpha) return alpha;
+            if (beta > stand_pat) beta = stand_pat;
+        }
+
+        chess::Movelist legal_moves;
+        chess::movegen::legalmoves<chess::movegen::MoveGenType::CAPTURE>(legal_moves, board, true); 
+
+        for (const auto& move : legal_moves) {
+            board.makeMove(move);
+            int eval = quiescence_search(board, alpha, beta, !is_maximizing);
+            board.unmakeMove(move);
+
+            if (is_maximizing) {
+                if (eval > alpha) alpha = eval;
+                if (alpha >= beta) break;
+            } else {
+                if (eval < beta) beta = eval;
+                if (beta <= alpha) break;
+            }
+        }
+        return is_maximizing ? alpha : beta;
+    }
+
     int evaluate_board(chess::Board board, int depth) {
         auto temp = board.isGameOver();
         chess::GameResultReason grr = temp.first;
@@ -206,7 +237,7 @@ public:
         } else if (grr == chess::GameResultReason::STALEMATE) {
             return 0;
         } 
-        
+
         std::map<chess::PieceType, const std::vector<std::vector<int>>> piece_square_tables = {
             {chess::PieceType::PAWN, PAWN_TABLE},
             {chess::PieceType::KNIGHT, KNIGHTS_TABLE},
@@ -300,8 +331,15 @@ int main() {
 // Here we let ourselves get forked (b3d2):
 // 8/ppN4p/4Q3/2p1pkp1/4p3/8/PPP1N1PP/1K1R1B1R b - - 6 26
 
-// Here we didn't take a draw by repetition (b4b3 instead of g8h8):
-// 4N1k1/5p2/1r1p4/3Pp1p1/8/1p3P1P/1PP3P1/1K2R3 w - - 0 56
-
-// Didn't move rook away -> Not enough depth
+// Didn't move rook away -> Horizon effect
 // r6r/1p1bkpp1/pN2p2p/8/8/1PnBPP2/P5PP/R4RK1 b - - 1 18
+
+
+// The hell ???
+// 8/1Pk5/3R4/4PP2/P7/4K3/1r3P2/8 w - - 9 63
+// ->
+// 8/1PkR4/8/4PP2/P7/4K3/1r3P2/8 b - - 10 63
+// ->
+// 1k6/1P1R4/8/4PP2/P7/4K3/1r3P2/8 w - - 11 64
+
+

@@ -1,6 +1,6 @@
 **Ideas**:
 
-- Implement basic openings
+- Endgame tables are too large -> Implement endgame mating heuristics
 
 - Try checks and captures first
 
@@ -20,6 +20,10 @@
 - Try the TSP
 
 - Look into how to actually make it faster so that we can go deeper
+
+- Quiescence Search: Implement a quiescence search that continues the search in positions with    possible tactical sequences (captures and checks), to avoid evaluating unstable positions.
+
+- Transposition Table: Use a hash table to store previously evaluated positions (identified by a Zobrist hash or similar) and their evaluation. This can save time if the same position is reached through different move orders.
 
 
 # AI-ed suggestions:
