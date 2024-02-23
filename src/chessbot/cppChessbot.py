@@ -18,7 +18,7 @@ lib.free_allocated_memory.restype = None
 
 
 class ChessBot4:
-    def __init__(self, depth):
+    def __init__(self, depth=4):
         self.obj = lib.new_chessbot(depth)
     
     def get_best_move(self, board_fen):

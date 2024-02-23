@@ -55,10 +55,10 @@ while not board.is_game_over():
     try:
         # white
         start_time = time.time()
-        move = whiteBot.get_best_move(board)
+        move = blackBot.get_best_move(board.fen())
         end_time = time.time()
         white_time += end_time - start_time
-        board.push(move)
+        board.push(chess.Move.from_uci(move))
 
         print("White's so far time:", white_time)
         mw.update_svg()
@@ -66,10 +66,10 @@ while not board.is_game_over():
 
         # black
         start_time = time.time()
-        move = blackBot.get_best_move(board.fen())
+        move = whiteBot.get_best_move(board)
         end_time = time.time()
         black_time += end_time - start_time
-        board.push(chess.Move.from_uci(move))
+        board.push(move)
 
         print("Black's so far time:", black_time)
         mw.update_svg()
