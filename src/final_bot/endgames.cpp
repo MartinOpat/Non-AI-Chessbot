@@ -200,8 +200,8 @@ EndgameType::Type detectEndgameType(const Board& board) {
 int evaluateEndgames(const Board& board) {
     int score = 0;
 
-    int whiteBalance = evaluateMaterial(board, Color::WHITE, true);
-    int blackBalance = evaluateMaterial(board, Color::BLACK, true);
+    int whiteBalance = evaluateMaterialAndPosition(board, Color::WHITE, true);
+    int blackBalance = evaluateMaterialAndPosition(board, Color::BLACK, true);
     Color strongSide = whiteBalance > blackBalance ? Color::WHITE : Color::BLACK;
 
     EndgameType::Type endgameType = detectEndgameType(board);

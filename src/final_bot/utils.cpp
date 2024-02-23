@@ -75,3 +75,16 @@ bool controlsCorner(Square bishop, Square corner) {
     return isLightSquared(bishop) == isLightSquared(corner);
 }
 
+std::string moveToString(const chess::Move& move) {
+    std::ostringstream oss;
+    oss << move; // Use the overloaded operator<<
+    return oss.str(); // Convert the contents of the stream into a string
+}
+
+bool isValidSquare(Square sq) {
+    int rank = sq.rank(); // Determine the rank (0 to 7)
+    int file = sq.file(); // Determine the file (0 to 7)
+
+    return rank >= 0 && rank < 8 && file >= 0 && file < 8;
+}
+

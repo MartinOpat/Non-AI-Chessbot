@@ -13,5 +13,7 @@ int manhattanEdgeDistance(Square s);
 bool canPromote(const Board& board, Color side, Square pawnSquare);
 bool isDraw(const Board& board);
 bool controlsCorner(Square bishop, Square corner);
+std::string moveToString(const chess::Move& move);
+bool isValidSquare(Square sq);
 
 #endif // UTILS_H

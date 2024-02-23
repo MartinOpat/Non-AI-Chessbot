@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "consts.h"
 
-int evaluateMaterial(const Board& board, Color color, bool isEndgame);
+int evaluateMaterialAndPosition(const Board& board, Color color, bool isEndgame);
 int evaluatePiece(const Board& board, PieceType pt, Color color, bool isEndgame);
 int controlCornerWeakKing(Square bishop1, Square bishop2, Square weakKing);
 int pushToEdge(Square s);

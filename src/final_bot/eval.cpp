@@ -2,14 +2,14 @@
 
 using namespace chess;
 
-int evaluateMaterial(const Board& board, Color color, bool isEndgame) {
+int evaluateMaterialAndPosition(const Board& board, Color color, bool isEndgame) {
     int score = 0;
     score += evaluatePiece(board, PieceType::PAWN, color, isEndgame);
     score += evaluatePiece(board, PieceType::KNIGHT, color, isEndgame);
     score += evaluatePiece(board, PieceType::BISHOP, color, isEndgame);
     score += evaluatePiece(board, PieceType::ROOK, color, isEndgame);
     score += evaluatePiece(board, PieceType::QUEEN, color, isEndgame);
-    return score;
+    return (color == Color::WHITE? score: -score);
 }
 
 int evaluatePiece(const Board& board, PieceType pt, Color color, bool isEndgame) {
@@ -31,8 +31,10 @@ int evaluatePiece(const Board& board, PieceType pt, Color color, bool isEndgame)
     } else if (pt == PieceType::QUEEN) {
         score = evaluate(bitboard, color, QUEENS_TABLE);
         score += bitboard.count() * (isEndgame? Value::QUEEN_EG : Value::QUEEN_MG);
+    } else if (pt == PieceType::KING) {
+        score += evaluateKingSafety(board, color);
     }
-    return score;
+    return (color == Color::WHITE? score: -score);
 }
 
 int evaluate(Bitboard& bitboard, Color color, const std::vector<std::vector<int>>& table) {
@@ -119,4 +121,31 @@ int pushAway(Square a, Square b) {
 }
 
 
-// TODO: Add king safety evaluation & king position
+int evaluateKingSafety(const Board& board, Color kingColor) {
+    // Initialize safety score
+    int safetyScore = 0;
+    
+    // Locate the king
+    Square kingSquare = Square(board.pieces(PieceType::KING, kingColor).lsb());
+    Bitboard surroundingSquares = attacks::king(kingSquare);
+
+    // Pawn shelter
+    Bitboard pawnsBitboard = board.pieces(PieceType::PAWN, kingColor);
+    safetyScore += 10 * __builtin_popcountll((surroundingSquares & pawnsBitboard).getBits());
+    
+    // Evaluate threats and square control around the king
+    static const Square kingSquares[] = {kingSquare-9, kingSquare-8, kingSquare-7, kingSquare-1, kingSquare+1, kingSquare+7, kingSquare+8, kingSquare+9};
+    for (Square s: kingSquares) {
+        if (isValidSquare(s) && !attacks::attackers(board, 1-kingColor, s).empty()) {
+            safetyScore -= 20; // Penalize if the king is under attack, adjust value as needed
+        }
+    }
+
+    Bitboard occupied = board.all();
+    if ((surroundingSquares & occupied) == surroundingSquares) {
+        safetyScore -= 10; // Penalize if nowhere to move
+    }
+    
+    return safetyScore;
+}
+
