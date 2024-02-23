@@ -11,7 +11,7 @@ enum Value : int {
     DRAW = 0,
     WIN = 10000,
     MATE = 32000,
-    INFINITY = 32001,
+    INFINITY = 2*3200+1,
     PAWN_MG = 126,
     KNIGHT_MG = 781,
     BISHOP_MG = 825,

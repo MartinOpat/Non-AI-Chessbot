@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <array>
 
 #include "chess-library/include/chess.hpp"
@@ -14,5 +15,6 @@
 #include "openings.h"
 #include "eval.h"
 #include "endgames.h"
+#include "moveHistory.h"
 
 #endif // BOT_H

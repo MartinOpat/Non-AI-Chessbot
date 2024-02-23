@@ -149,3 +149,4 @@ int evaluateKingSafety(const Board& board, Color kingColor) {
     return safetyScore;
 }
 
+// TODO: Add control of space and especially center

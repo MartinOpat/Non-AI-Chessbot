@@ -22,6 +22,7 @@ namespace EndgameType {
 }
 
 
+EndgameType::Type detectEndgameType(const Board& board);
 
 
 #endif // ENDGAMES_H
