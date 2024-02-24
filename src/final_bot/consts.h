@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <limits>
 
 #include "chess-library/include/chess.hpp"
 
@@ -11,7 +12,8 @@ enum Value : int {
     DRAW = 0,
     WIN = 10000,
     MATE = 32000,
-    INFINITY = 2*3200+1,
+    INFINITY = INT32_MAX,
+    NEG_INFINITY = INT32_MIN,
     PAWN_MG = 126,
     KNIGHT_MG = 781,
     BISHOP_MG = 825,

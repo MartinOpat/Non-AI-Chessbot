@@ -26,6 +26,12 @@ bool operator!=(const ScoreMovePair& a, const ScoreMovePair& b) {
     return !(a == b);
 }
 
+struct MinMaxResult {
+    int value;
+    int depth;
+    chess::Move bestMove;
+};
+
 using namespace chess;
 
 Square flipSquare(Square sq);

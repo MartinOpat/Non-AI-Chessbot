@@ -9,6 +9,28 @@ int evaluateMaterialAndPosition(const Board& board, Color color, bool isEndgame)
     score += evaluatePiece(board, PieceType::BISHOP, color, isEndgame);
     score += evaluatePiece(board, PieceType::ROOK, color, isEndgame);
     score += evaluatePiece(board, PieceType::QUEEN, color, isEndgame);
+    score += evaluatePiece(board, PieceType::KING, color, isEndgame);
+    return (color == Color::WHITE? score: -score);
+}
+
+int evaluateMaterial(const Board& board, Color color, bool isEndgame) {
+    int score = 0;
+
+    Bitboard pawnBitboard = board.pieces(PieceType::PAWN, color);
+    score += pawnBitboard.count() * (isEndgame? Value::PAWN_EG : Value::PAWN_MG);
+
+    Bitboard knightBitboard = board.pieces(PieceType::KNIGHT, color);
+    score += knightBitboard.count() * (isEndgame? Value::KNIGHT_EG : Value::KNIGHT_MG);
+
+    Bitboard bishopBitboard = board.pieces(PieceType::BISHOP, color);
+    score += bishopBitboard.count() * (isEndgame? Value::BISHOP_EG : Value::BISHOP_MG);
+
+    Bitboard rookBitboard = board.pieces(PieceType::ROOK, color);
+    score += rookBitboard.count() * (isEndgame? Value::ROOK_EG : Value::ROOK_MG);
+
+    Bitboard queenBitboard = board.pieces(PieceType::QUEEN, color);
+    score += queenBitboard.count() * (isEndgame? Value::QUEEN_EG : Value::QUEEN_MG);
+
     return (color == Color::WHITE? score: -score);
 }
 

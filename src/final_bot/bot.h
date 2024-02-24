@@ -17,5 +17,7 @@
 #include "eval.h"
 #include "endgames.h"
 #include "moveHistory.h"
+#include "movegen.h"
+
 
 #endif // BOT_H

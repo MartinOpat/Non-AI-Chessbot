@@ -6,7 +6,7 @@ using namespace chess;
 
 int evaluateKXK(const Board& board, Color strongSide) {
     Square strongKing = Square(board.pieces(PieceType::KING, strongSide).lsb());
-    Square weakKing = Square(board.pieces(PieceType::KING, 1-strongSide).lsb());
+    Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
 
     int score = Value::WIN; // Large value as winning base score
     score += pushToEdge(weakKing); // Encourage driving king to edge
@@ -17,7 +17,7 @@ int evaluateKXK(const Board& board, Color strongSide) {
 
 int evaluateKBNK(const Board& board, Color strongSide) {
     Square strongKing = Square(board.pieces(PieceType::KING, strongSide).lsb());
-    Square weakKing = Square(board.pieces(PieceType::KING, 1-strongSide).lsb());
+    Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
     Square strongBishop = Square(board.pieces(PieceType::BISHOP, strongSide).lsb());
     
     int score = 9500; // Base score for KBNK advantage
@@ -29,7 +29,7 @@ int evaluateKBNK(const Board& board, Color strongSide) {
 
 int evaluateKPK(const Board& board, Color strongSide) {
     Square strongKing = Square(board.pieces(PieceType::KING, strongSide).lsb());
-    Square weakKing = Square(board.pieces(PieceType::KING, 1-strongSide).lsb());
+    Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
     Square pawnSquare = Square(board.pieces(PieceType::PAWN, strongSide).lsb());
 
     // Normalize board for strongSide to be white and pawn direction upwards
@@ -52,7 +52,7 @@ int evaluateKPK(const Board& board, Color strongSide) {
 
 int evaluateKNNK(const Board& board, Color strongSide) {
     // Typically a draw, but you might score slight advantages for pushing the weak king to the edge
-    Square weakKing = Square(board.pieces(PieceType::KING, 1-strongSide).lsb());
+    Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
 
     int score = pushToEdge(weakKing); // Implement pushToEdge similar to Stockfish's push_to_edge
     return (strongSide == board.sideToMove()) ? score : -score;
@@ -60,9 +60,9 @@ int evaluateKNNK(const Board& board, Color strongSide) {
 
 int evaluateKRKP(const Board& board, Color strongSide) {
     Square strongKing = Square(board.pieces(PieceType::KING, strongSide).lsb());
-    Square weakKing = Square(board.pieces(PieceType::KING, 1-strongSide).lsb());
+    Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
     Square rookSquare = Square(board.pieces(PieceType::ROOK, strongSide).lsb());
-    Square pawnSquare = Square(board.pieces(PieceType::PAWN, 1-strongSide).lsb());
+    Square pawnSquare = Square(board.pieces(PieceType::PAWN, ~strongSide).lsb());
 
     int score = Value::ROOK_EG - manhattanDistance(strongKing, pawnSquare);
 
@@ -80,7 +80,7 @@ int evaluateKRKP(const Board& board, Color strongSide) {
 }
 
 int evaluateKRKB(const Board& board, Color strongSide) {
-    Square weakKing = Square(board.pieces(PieceType::KING, 1-strongSide).lsb());
+    Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
     // Push the king to the edge of the board for better chances of winning
     int score = pushToEdge(weakKing); // Implement based on your engine's metrics
 
@@ -89,8 +89,8 @@ int evaluateKRKB(const Board& board, Color strongSide) {
 }
 
 int evaluateKRKN(const Board& board, Color strongSide) {
-    Square weakKing = Square(board.pieces(PieceType::KING, 1-strongSide).lsb());
-    Square weakKnight = Square(board.pieces(PieceType::KNIGHT, 1-strongSide).lsb());
+    Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
+    Square weakKnight = Square(board.pieces(PieceType::KNIGHT, ~strongSide).lsb());
     // Generally winning, but distance from knight and king matters for practical chances
     int score = pushToEdge(weakKing) + pushAway(weakKing, weakKnight);
 
@@ -99,7 +99,7 @@ int evaluateKRKN(const Board& board, Color strongSide) {
 
 int evaluateKBBK(const Board& board, Color strongSide) {
     Square strongKing = Square(board.pieces(PieceType::KING, strongSide).lsb());
-    Square weakKing = Square(board.pieces(PieceType::KING, 1-strongSide).lsb());
+    Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
     Bitboard bishops = board.pieces(PieceType::BISHOP, strongSide);
 
     int index = bishops.lsb();
@@ -200,8 +200,8 @@ EndgameType::Type detectEndgameType(const Board& board) {
 int evaluateEndgames(const Board& board) {
     int score = 0;
 
-    int whiteBalance = evaluateMaterialAndPosition(board, Color::WHITE, true);
-    int blackBalance = evaluateMaterialAndPosition(board, Color::BLACK, true);
+    int whiteBalance = evaluateMaterial(board, Color::WHITE, true);
+    int blackBalance = evaluateMaterial(board, Color::BLACK, true);
     Color strongSide = whiteBalance > blackBalance ? Color::WHITE : Color::BLACK;
 
     EndgameType::Type endgameType = detectEndgameType(board);
@@ -234,5 +234,7 @@ int evaluateEndgames(const Board& board) {
             score = 0; // No endgame detected
             break;
     }
+
+    score += whiteBalance - blackBalance;
     return score;
 }
