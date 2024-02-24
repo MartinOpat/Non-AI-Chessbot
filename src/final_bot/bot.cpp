@@ -17,8 +17,6 @@ private:
     std::map<std::string, std::vector<ScoreMovePair>> openingBook;
     std::array<std::array<int, 64>, 64> historyCutoffTable;
 
-    std::vector<MoveNode> moveHistoryTree;
-
     std::unordered_map<uint64_t, TTEntry> transpositionTable;
 
     Board board;
@@ -35,7 +33,6 @@ public:
 
         openingBook = loadOpeningsFromFile("openings_filtered.pgn");
         historyCutoffTable = {0};
-        moveHistoryTree = {};
 
         board = Board();
     }
@@ -163,7 +160,7 @@ public:
         }
 
         if (board.isGameOver().first == GameResultReason::CHECKMATE) {
-            MinMaxResult result{.value=(board.sideToMove() == Color::WHITE) ? Value::MATE : -Value::MATE, .depth=depth};
+            return MinMaxResult{.value=(board.sideToMove() == Color::WHITE) ? Value::MATE : -Value::MATE, .depth=depth};
         }
 
         if (depth <= 0) {
@@ -280,3 +277,20 @@ public:
     }
 
 };
+
+
+extern "C" Bot* createBot() {
+    return new Bot();
+}
+
+extern "C" void deleteBot(Bot* bot) {
+    delete bot;
+}
+
+extern "C" const char* getBestMove(Bot* bot, const char* fen) {
+    return bot->getBestMove(fen);
+}
+
+extern "C" void freeMemory(char* str) {
+    delete[] str;
+}

@@ -3,6 +3,12 @@
 
 using namespace chess;
 
+void sortMoves(Movelist& moves, std::array<std::array<int, 64>, 64> historyCutoffTable) {
+    std::sort(moves.begin(), moves.end(), [&](const Move& a, const Move& b) {
+        return historyCutoffTable[a.from().index()][a.to().index()] > historyCutoffTable[b.from().index()][b.to().index()];
+    });
+}
+
 Movelist getSortedLegalMoves(const Board& board, std::array<std::array<int, 64>, 64>& historyCutoffTable, std::unordered_map<uint64_t, TTEntry>& transpositionTable) {
     Movelist captureMoves;
     Movelist quietMoves;
@@ -32,10 +38,4 @@ Movelist getSortedCapture(const Board& board, std::array<std::array<int, 64>, 64
     movegen::legalmoves<movegen::MoveGenType::CAPTURE>(captureMoves, board);
     sortMoves(captureMoves, historyCutoffTable);
     return captureMoves;
-}
-
-void sortMoves(Movelist& moves, std::array<std::array<int, 64>, 64> historyCutoffTable) {
-    std::sort(moves.begin(), moves.end(), [&](const Move& a, const Move& b) {
-        return historyCutoffTable[a.from().index()][a.to().index()] > historyCutoffTable[b.from().index()][b.to().index()];
-    });
 }
