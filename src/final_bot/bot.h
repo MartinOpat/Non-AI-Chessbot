@@ -8,6 +8,7 @@
 #include <string>
 #include <cstring>
 #include <array>
+#include <unordered_map>
 
 #include "chess-library/include/chess.hpp"
 #include "utils.h"

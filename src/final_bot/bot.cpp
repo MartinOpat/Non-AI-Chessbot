@@ -16,7 +16,10 @@ private:
 
     std::map<std::string, std::vector<ScoreMovePair>> openingBook;
     std::array<std::array<int, 64>, 64> historyCutoffTable;
+
     std::vector<MoveNode> moveHistoryTree;
+
+    std::unordered_map<uint64_t, int> transpositionTable;
 
     Board board;
 public:

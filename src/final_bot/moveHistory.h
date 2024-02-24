@@ -32,4 +32,15 @@ struct MoveNode {
     }
 };
 
+enum class NodeType {
+    EXACT, LOWERBOUND, UPPERBOUND
+};
+
+struct TTEntry {
+    int score;              // Evaluated score of the position
+    int depth;              // Depth of the search from which the score was derived
+    NodeType flag;               // Type of node (EXACT, LOWERBOUND, UPPERBOUND)
+    Move bestMove;          // Best move for this position
+};
+
 #endif // MOVEHISTORY_H
