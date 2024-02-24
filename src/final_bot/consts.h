@@ -1,3 +1,4 @@
+#pragma once
 #ifndef CONSTS_H
 #define CONSTS_H
 
@@ -6,6 +7,8 @@
 #include <limits>
 
 #include "chess-library/include/chess.hpp"
+
+const char startFen[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 enum Value : int {
     ZERO = 0,

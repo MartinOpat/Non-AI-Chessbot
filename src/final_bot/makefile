@@ -11,11 +11,18 @@ SRCS = bot.cpp endgames.cpp eval.cpp movegen.cpp openings.cpp utils.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # Shared library target
-TARGET = chessbot4.so  # Change this to your shared library name
+TARGET_LIB = chessbot4.so  # Change this to your shared library name
 
-# Build target
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -shared -o $(TARGET) $(OBJS)  # Add -shared flag here
+# Executable target
+TARGET_EXE = bot.out
+
+# Build shared library
+$(TARGET_LIB): $(OBJS)
+	$(CC) $(CFLAGS) -shared -o $(TARGET_LIB) $(OBJS)
+
+# Build executable
+$(TARGET_EXE): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET_EXE) $(OBJS)
 
 # Compile source files
 .cpp.o:
@@ -23,4 +30,10 @@ $(TARGET): $(OBJS)
 
 # Clean
 clean:
-	rm -f $(OBJS) $(TARGET)  # Removes the shared library as well; adjust if necessary
+	rm -f $(OBJS) $(TARGET_LIB) $(TARGET_EXE)
+
+# Phony targets for make commands
+.PHONY: clean exe
+
+# Command to make executable
+exe: $(TARGET_EXE)

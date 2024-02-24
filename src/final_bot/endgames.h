@@ -1,3 +1,4 @@
+#pragma once
 #ifndef ENDGAMES_H
 #define ENDGAMES_H
 

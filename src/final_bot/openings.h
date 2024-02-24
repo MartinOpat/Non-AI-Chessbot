@@ -1,3 +1,4 @@
+#pragma once
 #ifndef OPENINGS_H
 #define OPENINGS_H
 

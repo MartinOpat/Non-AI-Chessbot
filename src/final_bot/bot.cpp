@@ -23,7 +23,7 @@ private:
 public:
     Bot() {
         maxDepth = 4;
-        maxQuiescenceDepth = 2;
+        maxQuiescenceDepth = 0;
         maxTime = std::chrono::microseconds(2000000);
 
         isOpening = true;
@@ -31,7 +31,7 @@ public:
 
         us = Color::NONE;
 
-        openingBook = loadOpeningsFromFile("openings_filtered.pgn");
+        openingBook = loadOpeningsFromFile("better_filtered_openings.pgn");
         historyCutoffTable = {0};
 
         board = Board();
@@ -61,27 +61,19 @@ public:
     }
 
     void updateBoard(const std::string& fen) {
-        Bitboard curr = board.all();
-        Bitboard updated = Board(fen).all();
-        Bitboard diff = curr ^ updated;
-
-        Square s1 = Square(diff.lsb());
-        diff.clear(s1.index());
-        Square s2 = Square(diff.lsb());
-
-        assert(diff.empty());
-
-        Move move = Move::make<Move::NORMAL>(s1, s2);
-        board.makeMove(move);
-        if (board.getFen() == fen) {
-            return;
+        Movelist legalMoves;
+        movegen::legalmoves(legalMoves, board);
+        for (const auto& move : legalMoves) {
+            Board tempBoard = board;  // Make a copy of the current board
+            tempBoard.makeMove(move);
+            if (tempBoard.getFen() == fen) {
+                board.makeMove(move);  // Make the move on the original board
+                return;
+            }
         }
-        board.unmakeMove(move);
-        move = Move::make<Move::NORMAL>(s2, s1);
-        board.makeMove(move);
-
-        assert(board.getFen() == fen);
+        throw std::runtime_error("No valid move found to match the FEN.");
     }
+
 
     const char *getBestMove(const std::string& fen) {
         if (us == Color::NONE) {
@@ -91,7 +83,9 @@ public:
             isEndgame = true;
         }
 
-        updateBoard(fen);
+        std::cout << fen << " " << board.getFen() << std::endl;
+        if (fen != startFen) 
+            updateBoard(fen);
         transpositionTable.clear();
 
         if (isOpening) {
@@ -102,6 +96,8 @@ public:
                 } else {
                     move = openingBook[fen].front().move;
                 }
+                board.makeMove(move);
+
                 std::string temp = moveToString(move);
                 char *cstr = new char[temp.length() + 1];
                 std::strcpy(cstr, temp.c_str());
@@ -110,8 +106,11 @@ public:
             isOpening = false;
         }
 
+        // std::cout << "HERE" << std::endl;
         MinMaxResult result = iterativeDeepening();
         Move move = result.bestMove;
+        board.makeMove(move);
+
         std::string temp = moveToString(move);
         char *cstr = new char[temp.length() + 1];
         std::strcpy(cstr, temp.c_str());
@@ -126,13 +125,14 @@ public:
         int alpha = -Value::INFINITY;
         int beta = Value::INFINITY;
 
-        int maxDepth = 1;
+        int depth = 1;
         MinMaxResult bestMove;
-        while (duration < maxTime) {
-            bestMove = alphaBeta(0, maxDepth, alpha, beta);
-            maxDepth++;
+        while (duration < maxTime and depth <= maxDepth) {
+            std::cout << depth << std::endl;
+            bestMove = alphaBeta(depth, alpha, beta, board.sideToMove());
+            depth++;
             end = std::chrono::high_resolution_clock::now();
-            duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+            duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);        
         }
         return bestMove;
     }
@@ -163,6 +163,7 @@ public:
             return MinMaxResult{.value=(board.sideToMove() == Color::WHITE) ? Value::MATE : -Value::MATE, .depth=depth};
         }
 
+        // std::cout << "HERE3" << std::endl;
         if (depth <= 0) {
             MinMaxResult result = quiescenseSearch(alpha, beta, maxQuiescenceDepth, c);
             return result;
@@ -217,8 +218,10 @@ public:
             boardValue = evaluateBoard(board);
         }
         if (boardValue >= beta) {
-            return MinMaxResult{.value=beta, .depth=depth};
+            // std::cout << "HERE4.5" << std::endl;
+            return MinMaxResult {.value=beta, .depth=depth};
         }
+        // std::cout << "HERE4" << std::endl;
         if (alpha < boardValue) {
             alpha = boardValue;
         }
@@ -242,6 +245,8 @@ public:
         for (const Move& move: moves) {
             board.makeMove(move);
             MinMaxResult possBest = quiescenseSearch(-beta, -alpha, depth-1, ~c);
+            board.unmakeMove(move);
+            // std::cout << "HERE5" << std::endl;
             
             possBest.value = -possBest.value;
             possBest.bestMove = move;
@@ -293,4 +298,13 @@ extern "C" const char* getBestMove(Bot* bot, const char* fen) {
 
 extern "C" void freeMemory(char* str) {
     delete[] str;
+}
+
+int main() {
+    Bot* bot = createBot();
+    const char* move = getBestMove(bot, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
+    deleteBot(bot);
+    return 0;
 }

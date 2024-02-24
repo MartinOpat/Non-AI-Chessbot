@@ -1,3 +1,4 @@
+#pragma once
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -9,6 +10,22 @@ struct ScoreMovePair {
 
     ScoreMovePair(int score, chess::Move move) : score(score), move(move) {}
 };
+
+inline bool operator<(const ScoreMovePair& a, const ScoreMovePair& b) {
+        return a.score < b.score;
+}
+
+inline bool operator>(const ScoreMovePair& a, const ScoreMovePair& b) {
+    return a.score > b.score;
+}
+
+inline bool operator==(const ScoreMovePair& a, const ScoreMovePair& b) {
+    return a.score == b.score && a.move == b.move;
+}
+
+inline bool operator!=(const ScoreMovePair& a, const ScoreMovePair& b) {
+    return !(a == b);
+}
 
 struct MinMaxResult {
     int value;

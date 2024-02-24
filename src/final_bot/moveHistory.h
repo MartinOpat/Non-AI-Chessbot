@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MOVEHISTORY_H
 #define MOVEHISTORY_H
 

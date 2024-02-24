@@ -87,19 +87,3 @@ bool isValidSquare(Square sq) {
 
     return rank >= 0 && rank < 8 && file >= 0 && file < 8;
 }
-
-bool operator<(const ScoreMovePair& a, const ScoreMovePair& b) {
-        return a.score < b.score;
-}
-
-bool operator>(const ScoreMovePair& a, const ScoreMovePair& b) {
-    return a.score > b.score;
-}
-
-bool operator==(const ScoreMovePair& a, const ScoreMovePair& b) {
-    return a.score == b.score && a.move == b.move;
-}
-
-bool operator!=(const ScoreMovePair& a, const ScoreMovePair& b) {
-    return !(a == b);
-}
