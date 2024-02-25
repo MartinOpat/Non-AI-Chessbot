@@ -23,7 +23,7 @@ private:
 public:
     Bot() {
         maxDepth = 4;
-        maxQuiescenceDepth = 2;
+        maxQuiescenceDepth = 4;
         maxTime = std::chrono::microseconds(2000000);
 
         isOpening = true;
@@ -52,6 +52,7 @@ public:
 
         int score = 0;
         if (isEndgame) {
+            std::cout << "We found ourselves in the endgame" << std::endl;
             score = evaluateEndgames(board);
         } else {
             score += evaluateMaterialAndPosition(board, Color::WHITE, false);
@@ -109,7 +110,7 @@ public:
         Move move = result.bestMove;
         board.makeMove(move);
 
-        // std::cout << "Best Move: " << moveToString(move) << " Score: " << result.value << std::endl;
+        std::cout << "Best Move: " << moveToString(move) << " Score: " << result.value << std::endl;
         std::string temp = moveToString(move);
         char *cstr = new char[temp.length() + 1];
         std::strcpy(cstr, temp.c_str());
@@ -408,32 +409,50 @@ extern "C" void freeMemory(char* str) {
     delete[] str;
 }
 
-// int main() {
-//     Bot* bot = createBot();
-//     // 
-//     // 3r2kr/1p3ppp/8/1p1P4/1P2R3/8/P5PP/R5K1 b - - 1 26
-//     const char* move = getBestMove(bot, "6kr/1p3ppp/8/1p1r4/1P2R3/8/P5PP/R5K1 w - - 0 27");
-//     std::cout << move << std::endl;
+int main() {
+    Bot* bot = createBot();
+    // 
+    const char* move = getBestMove(bot, "8/8/2R5/2P5/5PP1/4k3/8/7K w - - 1 102");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-//     // int black = evaluateMaterialAndPosition(Board("r1N2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 b - - 0 17"), Color::BLACK, false);
-//     // int white = evaluateMaterialAndPosition(Board("r1N2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 b - - 0 17"), Color::WHITE, false);
-//     // int valBefore = black + white;
-//     // std::cout << "black: " << black << " white: " << white << std::endl;
-        
-//     // std::cout << valBefore << std::endl;
+    // 
+    move = getBestMove(bot, "8/8/2R5/2P2P2/5kP1/8/8/7K w - - 1 103");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-//     // int valAfter = evaluateMaterialAndPosition(Board("1rN2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 1 18"), Color::WHITE, false) + 
-//     //     evaluateMaterialAndPosition(Board("1rN2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 1 18"), Color::BLACK, false);
-//     // std::cout << valAfter << std::endl;
+    // // 
+    // move = getBestMove(bot, "8/5R2/2p1k3/2P5/8/4B3/5PP1/6K1 w - - 62 105");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
+
+    // // 
+    // move = getBestMove(bot, "8/6R1/2p5/2P1k3/8/4B3/5PP1/6K1 w - - 64 106");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
+
+    // //
+    // move = getBestMove(bot, "8/5R2/2p1k3/2P5/8/4B3/5PP1/6K1 w - - 66 107");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
+
+    // //
+    // move = getBestMove(bot, "8/6R1/2p5/2P1k3/8/4B3/5PP1/6K1 w - - 68 108");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
+
+    // //
+    // move = getBestMove(bot, "8/5R2/2p1k3/2P5/8/4B3/5PP1/6K1 w - - 70 109");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
+
+    // // 
+    // move = getBestMove(bot, "8/2R5/2p5/2P1k3/8/4B3/5PP1/6K1 w - - 72 110");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
 
-//     // int valBest = evaluateMaterialAndPosition(Board("2r2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 0 18"), Color::WHITE, false) + 
-//     //     evaluateMaterialAndPosition(Board("2r2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 0 18"), Color::BLACK, false);
-//     // std::cout << valBest << std::endl;
-    
 
-
-//     freeMemory((char*)move);
-//     deleteBot(bot);
-//     return 0;
-// }
+    deleteBot(bot);
+    return 0;
+}

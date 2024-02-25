@@ -9,7 +9,7 @@ import numpy as np
 import sys
 sys.setrecursionlimit(10**9)
 
-from chessbot3 import ChessBot3
+from backup import ChessBot as ChessBot3
 from wrapper import ChessBot
 
 from PyQt5.QtSvg import QSvgWidget
@@ -68,7 +68,7 @@ while not board.is_game_over():
 
         # black
         start_time = time.time()
-        move = whiteBot.get_best_move(board)
+        move = whiteBot.__call__(board.fen())
         end_time = time.time()
         black_time += end_time - start_time
         board.push(move)

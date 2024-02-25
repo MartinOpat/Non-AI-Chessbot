@@ -59,7 +59,7 @@ bool isDraw(const Board& board) {
     }
 
     // Draw by threefold repetition
-    if (board.isRepetition(3)) {
+    if (board.isRepetition(1)) {
         return true;
     }
 

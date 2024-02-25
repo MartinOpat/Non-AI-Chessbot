@@ -12,7 +12,7 @@ int evaluateKXK(const Board& board, Color strongSide) {
     score += pushToEdge(weakKing); // Encourage driving king to edge
     score += pushClose(strongKing, weakKing); // Encourage closing distance between kings
 
-    return strongSide == board.sideToMove() ? score : -score;
+    return strongSide == Color::WHITE ? score : -score;
 }
 
 int evaluateKBNK(const Board& board, Color strongSide) {
@@ -24,7 +24,7 @@ int evaluateKBNK(const Board& board, Color strongSide) {
     score += pushClose(strongKing, weakKing);
     score += pushToCorner(weakKing); // Drive the weak king to a corner
 
-    return strongSide == board.sideToMove() ? score : -score;
+    return strongSide == Color::WHITE ? score : -score;
 }
 
 int evaluateKPK(const Board& board, Color strongSide) {
@@ -47,7 +47,7 @@ int evaluateKPK(const Board& board, Color strongSide) {
     // Use your method to convert squares into your board's coordinate system if needed
     int score = Value::WIN + Value::PAWN_EG + pawnSquare.rank(); // Adjust for your engine's scoring
 
-    return (strongSide == board.sideToMove()) ? score : -score;
+    return (strongSide == Color::WHITE) ? score : -score;
 }
 
 int evaluateKNNK(const Board& board, Color strongSide) {
@@ -55,7 +55,7 @@ int evaluateKNNK(const Board& board, Color strongSide) {
     Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
 
     int score = pushToEdge(weakKing); // Implement pushToEdge similar to Stockfish's push_to_edge
-    return (strongSide == board.sideToMove()) ? score : -score;
+    return (strongSide == Color::WHITE) ? score : -score;
 }
 
 int evaluateKRKP(const Board& board, Color strongSide) {
@@ -76,7 +76,7 @@ int evaluateKRKP(const Board& board, Color strongSide) {
         score -= 500;
     }
 
-    return (strongSide == board.sideToMove()) ? score : -score;
+    return (strongSide == Color::WHITE) ? score : -score;
 }
 
 int evaluateKRKB(const Board& board, Color strongSide) {
@@ -85,7 +85,7 @@ int evaluateKRKB(const Board& board, Color strongSide) {
     int score = pushToEdge(weakKing); // Implement based on your engine's metrics
 
     // This score can be adjusted based on further analysis or specific position checks
-    return (strongSide == board.sideToMove()) ? score : -score;
+    return (strongSide == Color::WHITE) ? score : -score;
 }
 
 int evaluateKRKN(const Board& board, Color strongSide) {
@@ -94,7 +94,7 @@ int evaluateKRKN(const Board& board, Color strongSide) {
     // Generally winning, but distance from knight and king matters for practical chances
     int score = pushToEdge(weakKing) + pushAway(weakKing, weakKnight);
 
-    return (strongSide == board.sideToMove()) ? score : -score;
+    return (strongSide == Color::WHITE) ? score : -score;
 }
 
 int evaluateKBBK(const Board& board, Color strongSide) {
@@ -112,7 +112,7 @@ int evaluateKBBK(const Board& board, Color strongSide) {
     score += pushClose(strongKing, weakKing);
     score += controlCornerWeakKing(bishop1, bishop2, weakKing);
 
-    return (strongSide == board.sideToMove()) ? score : -score;
+    return (strongSide == Color::WHITE) ? score : -score;
 }
 
 
@@ -235,6 +235,6 @@ int evaluateEndgames(const Board& board) {
             break;
     }
 
-    score += whiteBalance - blackBalance;
+    score += whiteBalance + blackBalance;
     return score;
 }
