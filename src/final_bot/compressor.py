@@ -16,4 +16,4 @@ def compress_base64_encoded_file(file_path):
     with open("compressed.txt", "w") as f:
         f.write(compressed_data)
 
-compress_base64_encoded_file(input())
+compress_base64_encoded_file("chessbot4.so")

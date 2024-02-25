@@ -162,6 +162,5 @@ cython_debug/
 databases/
 stockfish/
 chess-library/
-AltairChessEngine-master/
 *.out
 *.so

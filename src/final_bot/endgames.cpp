@@ -8,9 +8,18 @@ int evaluateKXK(const Board& board, Color strongSide) {
     Square strongKing = Square(board.pieces(PieceType::KING, strongSide).lsb());
     Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
 
-    int score = Value::WIN; // Large value as winning base score
-    score += pushToEdge(weakKing); // Encourage driving king to edge
+    int score = pushToEdge(weakKing); // Encourage driving king to edge
     score += pushClose(strongKing, weakKing); // Encourage closing distance between kings
+
+    Bitboard strongPieces = board.us(strongSide) ^ board.pieces(PieceType::KING, strongSide);
+    while (strongPieces) {
+        Square pieceSquare = Square(strongPieces.lsb());
+        score -= manhattanDistance(pieceSquare, strongKing);
+        strongPieces.clear(pieceSquare.index());
+    }
+    score -= evaluateKingSafety(board, ~strongSide);
+    score += pushToEdge(weakKing);
+
 
     return strongSide == Color::WHITE ? score : -score;
 }

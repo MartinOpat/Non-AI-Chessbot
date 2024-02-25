@@ -7,6 +7,9 @@ class Bot {
 private:
     int maxDepth;
     int maxQuiescenceDepth;
+    int iterativeDeepeningDepth;
+
+    std::chrono::high_resolution_clock::time_point startTime;
     std::chrono::microseconds maxTime;
 
     bool isOpening;
@@ -24,7 +27,7 @@ public:
     Bot() {
         maxDepth = 4;
         maxQuiescenceDepth = 2;
-        maxTime = std::chrono::microseconds(2000000);
+        maxTime = std::chrono::microseconds(1000000);
 
         isOpening = true;
         isEndgame = false;
@@ -47,7 +50,7 @@ public:
 
         auto grr = board.isGameOver().first;
         if (grr == GameResultReason::CHECKMATE) {
-            return (board.sideToMove() == Color::WHITE) ? -Value::MATE-depth : Value::MATE+depth;
+            return (board.sideToMove() == Color::WHITE) ? -Value::MATE-depth+iterativeDeepeningDepth : Value::MATE+depth-iterativeDeepeningDepth;
         }
 
         int score = 0;
@@ -77,6 +80,7 @@ public:
 
     const char *getBestMove(const std::string& fen) {
         if (detectEndgameType(board) != EndgameType::NONE) {
+            maxDepth = 8;
             isEndgame = true;
         }
 
@@ -105,9 +109,13 @@ public:
         transpositionTable.clear();
         MinMaxResult result = iterativeDeepening(board.sideToMove());
         Move move = result.bestMove;
+        if (move.from() == move.to()) {
+            move = Move::NO_MOVE;
+        }
+
         board.makeMove(move);
 
-        std::cout << "Best Move: " << moveToString(move) << " Score: " << result.value << std::endl;
+        // std::cout << "Best Move: " << moveToString(move) << " Score: " << result.value << std::endl;
         std::string temp = moveToString(move);
         char *cstr = new char[temp.length() + 1];
         std::strcpy(cstr, temp.c_str());
@@ -115,12 +123,17 @@ public:
     }
 
     MinMaxResult iterativeDeepening(Color c) {
-        int depth = 1;
+        iterativeDeepeningDepth = 1;
+        startTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime);
+
         MinMaxResult bestMove;
-        while (depth <= maxDepth) {
-            bestMove = alphaBeta(depth, -Value::MATE, Value::MATE, c);
-            std::cout << "Depth: " << depth << " Score: " << bestMove.value << " Best Move: " << moveToString(bestMove.bestMove) << std::endl;
-            depth++;
+        while (2*duration < maxTime) {
+            bestMove = alphaBeta(iterativeDeepeningDepth, -Value::MATE, Value::MATE, c);
+            std::cout << "Depth: " << iterativeDeepeningDepth << " Score: " << bestMove.value << " Best Move: " << moveToString(bestMove.bestMove) << std::endl;
+            iterativeDeepeningDepth++;
+
+            duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime);
         }
         return bestMove;
     }
@@ -128,6 +141,14 @@ public:
     MinMaxResult alphaBeta(int depth, int alpha, int beta, Color c) {
         uint64_t hash = board.hash();
         int origAlpha = alpha;
+
+        if (board.isGameOver().first == GameResultReason::CHECKMATE) {
+            return MinMaxResult{.value=-Value::MATE-depth + iterativeDeepeningDepth, .depth=depth};
+        }
+
+        if (isDraw(board)) {
+            return MinMaxResult{.value=0, .depth=depth};
+        }
 
         if (transpositionTable.find(hash) != transpositionTable.end()) {
             TTEntry entry = transpositionTable[hash];
@@ -143,10 +164,6 @@ public:
                     return MinMaxResult{.value=entry.score, .depth=entry.depth};
                 }
             }
-        }
-
-        if (board.isGameOver().first == GameResultReason::CHECKMATE) {
-            return MinMaxResult{.value=-Value::MATE-depth, .depth=depth};
         }
 
         if (depth <= 0) {
@@ -278,44 +295,44 @@ int main() {
     const char *move;
 
     //
-    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 14 47");
+    move = getBestMove(bot, "6k1/8/4K3/3N4/3B4/8/8/8 b - - 27 14");
     std::cout << move << std::endl;
     freeMemory((char*)move);
 
-    // 
-    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 16 48");
-    std::cout << move << std::endl;
-    freeMemory((char*)move);
+    // // 
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 16 48");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-    //
-    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 18 49");
-    std::cout << move << std::endl;
-    freeMemory((char*)move);
+    // //
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 18 49");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-    // 
-    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 20 50");
-    std::cout << move << std::endl;
-    freeMemory((char*)move);
+    // // 
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 20 50");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-    //
-    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 22 51");
-    std::cout << move << std::endl;
-    freeMemory((char*)move);
+    // //
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 22 51");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-    // 
-    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 24 52");
-    std::cout << move << std::endl;
-    freeMemory((char*)move);
+    // // 
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 24 52");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-    //
-    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 26 53");
-    std::cout << move << std::endl;
-    freeMemory((char*)move);
+    // //
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 26 53");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-    // 
-    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 28 54");
-    std::cout << move << std::endl;
-    freeMemory((char*)move);
+    // // 
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 28 54");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
     deleteBot(bot);
     return 0;

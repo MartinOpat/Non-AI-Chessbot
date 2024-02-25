@@ -36,7 +36,8 @@ class MainWindow(QWidget):
 
 
 
-board = chess.Board("8/6p1/7p/3kp2P/8/8/4rPP1/R5K1 w - - 12 46")
+board = chess.Board("8/8/4N3/3K1k2/3B4/8/8/8 w - - 0 1")
+# board = chess.Board()
 
 app = QApplication([])
 mw = MainWindow(board)
@@ -51,8 +52,9 @@ white_time = 0
 black_time = 0
 
 # Example game loop
-while not board.is_game_over():
+while not board.is_game_over(claim_draw=False):
     try:
+        print(board.fen())
         # white
         start_time = time.time()
         move = blackBot.__call__(board.fen())
@@ -64,9 +66,10 @@ while not board.is_game_over():
         mw.update_svg()
         QApplication.processEvents()
 
-        if board.is_game_over():
+        if board.is_game_over(claim_draw=False):
             break
 
+        print(board.fen())
         # black
         start_time = time.time()
         move = whiteBot.__call__(board.fen())
@@ -78,6 +81,7 @@ while not board.is_game_over():
         mw.update_svg()
         QApplication.processEvents()
 
+    
     except Exception as e:
         print(e)
         break
