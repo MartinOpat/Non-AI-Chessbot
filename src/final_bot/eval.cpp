@@ -2,7 +2,7 @@
 
 using namespace chess;
 
-int evaluate(Bitboard& bitboard, Color color, const std::vector<std::vector<int>>& table) {
+int evaluate(Bitboard bitboard, Color color, const std::vector<std::vector<int>>& table) {
     int score = 0;
     int row = 0;
     int col = 0;
@@ -19,7 +19,7 @@ int evaluate(Bitboard& bitboard, Color color, const std::vector<std::vector<int>
         } else {
             row = 7 - temp / 8;
             col = 7 - temp % 8;
-            score -= table[row][col];
+            score += table[row][col];
         }
     }
     return score;
@@ -35,19 +35,19 @@ int evaluateKingSafety(const Board& board, Color kingColor) {
 
     // Pawn shelter
     Bitboard pawnsBitboard = board.pieces(PieceType::PAWN, kingColor);
-    safetyScore += 10 * __builtin_popcountll((surroundingSquares & pawnsBitboard).getBits());
+    safetyScore += 5 * __builtin_popcountll((surroundingSquares & pawnsBitboard).getBits());
     
     // Evaluate threats and square control around the king
     static const Square kingSquares[] = {kingSquare-9, kingSquare-8, kingSquare-7, kingSquare-1, kingSquare+1, kingSquare+7, kingSquare+8, kingSquare+9};
     for (Square s: kingSquares) {
-        if (isValidSquare(s) && !attacks::attackers(board, 1-kingColor, s).empty()) {
-            safetyScore -= 20; // Penalize if the king is under attack, adjust value as needed
+        if (isValidSquare(s) && !attacks::attackers(board, ~kingColor, s).empty()) {
+            safetyScore -= 5; // Penalize if the king is under attack, adjust value as needed
         }
     }
 
     Bitboard occupied = board.all();
     if ((surroundingSquares & occupied) == surroundingSquares) {
-        safetyScore -= 10; // Penalize if nowhere to move
+        safetyScore -= 5; // Penalize if nowhere to move
     }
     
     return safetyScore;
@@ -73,9 +73,12 @@ int evaluatePiece(const Board& board, PieceType pt, Color color, bool isEndgame)
         score = evaluate(bitboard, color, QUEENS_TABLE);
         score += bitboard.count() * (isEndgame? Value::QUEEN_EG : Value::QUEEN_MG);
     } else if (pt == PieceType::KING) {
+        score = evaluate(bitboard, color, (isEndgame? KINGS_TABLE_ENDGAME : KINGS_TABLE_OPENING));
         score += evaluateKingSafety(board, color);
     }
-    return (color == Color::WHITE? score: -score);
+
+    // std::cout << "Piece score: " << score << std::endl;
+    return score;
 }
 
 int controlCornerWeakKing(Square bishop1, Square bishop2, Square weakKing) {
@@ -141,11 +144,17 @@ int pushAway(Square a, Square b) {
 int evaluateMaterialAndPosition(const Board& board, Color color, bool isEndgame) {
     int score = 0;
     score += evaluatePiece(board, PieceType::PAWN, color, isEndgame);
+    // std::cout << "Pawn score: " << evaluatePiece(board, PieceType::PAWN, color, isEndgame) << std::endl;
     score += evaluatePiece(board, PieceType::KNIGHT, color, isEndgame);
+    // std::cout << "Knight score: " << evaluatePiece(board, PieceType::KNIGHT, color, isEndgame) << std::endl;
     score += evaluatePiece(board, PieceType::BISHOP, color, isEndgame);
+    // std::cout << "Bishop score: " << score << std::endl;
     score += evaluatePiece(board, PieceType::ROOK, color, isEndgame);
+    // std::cout << "Rook score: " << score << std::endl;
     score += evaluatePiece(board, PieceType::QUEEN, color, isEndgame);
+    // std::cout << "Queen score: " << score << std::endl;
     score += evaluatePiece(board, PieceType::KING, color, isEndgame);
+    // std::cout << "King score: " << score << std::endl;
     return (color == Color::WHITE? score: -score);
 }
 

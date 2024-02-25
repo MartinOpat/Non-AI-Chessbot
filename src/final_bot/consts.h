@@ -17,16 +17,16 @@ enum Value : int {
     MATE = 32000,
     INFINITY = INT32_MAX,
     NEG_INFINITY = INT32_MIN,
-    PAWN_MG = 126,
-    KNIGHT_MG = 781,
-    BISHOP_MG = 825,
-    ROOK_MG = 1276,
-    QUEEN_MG = 2538,
-    PAWN_EG = 208,
-    KNIGHT_EG = 854,
-    BISHOP_EG = 915,
-    ROOK_EG = 1380,
-    QUEEN_EG = 2680
+    PAWN_MG = 100,
+    KNIGHT_MG = 320,
+    BISHOP_MG = 330,
+    ROOK_MG = 500,
+    QUEEN_MG = 900,
+    PAWN_EG = 200,
+    KNIGHT_EG = 340,
+    BISHOP_EG = 360,
+    ROOK_EG = 520,
+    QUEEN_EG = 920
 };
 
 const std::vector<std::vector<int>> PAWN_TABLE = {

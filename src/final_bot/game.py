@@ -54,7 +54,7 @@ while not board.is_game_over():
     try:
         # white
         start_time = time.time()
-        move = whiteBot.get_best_move(board)
+        move = blackBot.__call__(board.fen())
         end_time = time.time()
         white_time += end_time - start_time
         board.push(move)
@@ -63,9 +63,12 @@ while not board.is_game_over():
         mw.update_svg()
         QApplication.processEvents()
 
+        if board.is_game_over():
+            break
+
         # black
         start_time = time.time()
-        move = blackBot.__call__(board.fen())
+        move = whiteBot.get_best_move(board)
         end_time = time.time()
         black_time += end_time - start_time
         board.push(move)
