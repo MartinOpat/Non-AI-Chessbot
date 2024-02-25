@@ -23,7 +23,7 @@ private:
 public:
     Bot() {
         maxDepth = 4;
-        maxQuiescenceDepth = 4;
+        maxQuiescenceDepth = 2;
         maxTime = std::chrono::microseconds(2000000);
 
         isOpening = true;
@@ -52,13 +52,10 @@ public:
 
         int score = 0;
         if (isEndgame) {
-            std::cout << "We found ourselves in the endgame" << std::endl;
             score = evaluateEndgames(board);
         } else {
             score += evaluateMaterialAndPosition(board, Color::WHITE, false);
             score += evaluateMaterialAndPosition(board, Color::BLACK, false);
-            // score += evaluateMaterial(board, Color::WHITE, false);
-            // score += evaluateMaterial(board, Color::BLACK, false);
         }
         return score;
     }
@@ -122,7 +119,7 @@ public:
         MinMaxResult bestMove;
         while (depth <= maxDepth) {
             bestMove = alphaBeta(depth, -Value::MATE, Value::MATE, c);
-            // std::cout << "Depth: " << depth << " Score: " << bestMove.value << " Best Move: " << moveToString(bestMove.bestMove) << std::endl;
+            std::cout << "Depth: " << depth << " Score: " << bestMove.value << " Best Move: " << moveToString(bestMove.bestMove) << std::endl;
             depth++;
         }
         return bestMove;
@@ -136,14 +133,14 @@ public:
             TTEntry entry = transpositionTable[hash];
             if (entry.depth >= depth) {
                 if (entry.flag == NodeType::EXACT) {
-                    return MinMaxResult{.value=entry.score, .depth=depth, .bestMove=entry.bestMove};
+                    return MinMaxResult{.value=entry.score, .depth=entry.depth};
                 } else if (entry.flag == NodeType::LOWERBOUND) {
                     alpha = std::max(alpha, entry.score);
                 } else if (entry.flag == NodeType::UPPERBOUND) {
                     beta = std::min(beta, entry.score);
                 }
                 if (alpha >= beta) {
-                    return MinMaxResult{.value=entry.score, .depth=depth, .bestMove=entry.bestMove};
+                    return MinMaxResult{.value=entry.score, .depth=entry.depth};
                 }
             }
         }
@@ -191,96 +188,31 @@ public:
         return best;
     }
 
-    MinMaxResult alphaBetaOld(int depth, int alpha, int beta, Color c) {
-        uint64_t hash = board.hash();
-
-        if (transpositionTable.find(hash) != transpositionTable.end()) {
-            TTEntry entry = transpositionTable[hash];
-            if (entry.depth >= depth) {
-                if (entry.flag == NodeType::EXACT) {
-                    return MinMaxResult{.value=entry.score, .depth=depth, .bestMove=entry.bestMove};
-                } else if (entry.flag == NodeType::LOWERBOUND) {
-                    alpha = std::max(alpha, entry.score);
-                } else if (entry.flag == NodeType::UPPERBOUND) {
-                    beta = std::min(beta, entry.score);
-                }
-                if (alpha >= beta) {
-                    return MinMaxResult{.value=entry.score, .depth=depth, .bestMove=entry.bestMove};
-                }
-            }
-        }
-
-        if (board.isGameOver().first == GameResultReason::CHECKMATE) {
-            return MinMaxResult{.value=(board.sideToMove() == Color::WHITE) ? Value::MATE : -Value::MATE, .depth=depth, .bestMove=Move::NO_MOVE};
-        }
-
-        if (depth <= 0) {
-            return quiescenseSearch(maxQuiescenceDepth, alpha, beta, c);
-        }
-
-        Movelist legalMoves = getSortedLegalMoves(board, historyCutoffTable, transpositionTable);
-        MinMaxResult best{.value=(c == Color::WHITE? Value::NEG_INFINITY: Value::INFINITY), .depth=0};
-
-        for (const Move& move: legalMoves) {
-            board.makeMove(move);
-            MinMaxResult possBest = alphaBeta(depth-1, alpha, beta, ~c);
-            board.unmakeMove(move);
-
-            if (c == Color::WHITE) {
-                if (possBest.value > best.value) {
-                    best = possBest;
-                    best.bestMove = move;
-                }
-                if (best.value > beta) {
-                    updateHistoryScore(move, depth);
-                    break;
-                }
-                alpha = std::max(alpha, best.value);
-            } else {
-                if (possBest.value < best.value) {
-                    best = possBest;
-                    best.bestMove = move;
-                }
-                if (best.value < alpha) {
-                    updateHistoryScore(move, depth);
-                    break;
-                }
-                beta = std::min(beta, best.value);
-            }
-        }
-        
-        TTEntry entry{.score=best.value, .depth=best.depth, .bestMove=best.bestMove};
-        if (c == Color::WHITE) {
-            if (best.value <= alpha) {
-                entry.flag = NodeType::UPPERBOUND;
-            } else if (best.value >= beta) {
-                entry.flag = NodeType::LOWERBOUND;
-            } else {
-                entry.flag = NodeType::EXACT;
-            }
-        } else {
-            if (best.value >= beta) {
-                entry.flag = NodeType::UPPERBOUND;
-            } else if (best.value <= alpha) {
-                entry.flag = NodeType::LOWERBOUND;
-            } else {
-                entry.flag = NodeType::EXACT;
-            }
-        }
-        transpositionTable[hash] = entry;
-
-        return best;
-    }
-
     MinMaxResult quiescenseSearch(int depth, int alpha, int beta, Color c) {
         int max = (c == Color::WHITE ? 1 : -1);
         int boardValue = max * evaluateBoard(board, depth);
+        uint64_t hash = board.hash();
         if (boardValue >= beta) {
             return MinMaxResult {.value=beta, .depth=depth};
         }
         if (alpha < boardValue) {
             alpha = boardValue;
         }
+
+        if (transpositionTable.find(hash) != transpositionTable.end()) {
+            TTEntry entry = transpositionTable[hash];
+            if (entry.flag == NodeType::EXACT) {
+                return MinMaxResult{.value=entry.score, .depth=entry.depth};
+            } else if (entry.flag == NodeType::LOWERBOUND) {
+                alpha = std::max(alpha, entry.score);
+            } else if (entry.flag == NodeType::UPPERBOUND) {
+                beta = std::min(beta, entry.score);
+            }
+            if (alpha >= beta) {
+                return MinMaxResult{.value=entry.score, .depth=entry.depth};
+            }
+        }
+
 
         Movelist moves = getSortedCapture(board, historyCutoffTable);
         MinMaxResult best{.value=Value::NEG_INFINITY, .depth=0};
@@ -292,7 +224,8 @@ public:
             board.unmakeMove(move);
 
             if (possBest.value > beta) {
-                return MinMaxResult {.value=beta, .depth=depth};
+                updateHistoryScore(move, depth);
+                return MinMaxResult {.value=beta, .depth=possBest.depth};
             }
             if (possBest.value > alpha) {
                 best = possBest;
@@ -300,69 +233,8 @@ public:
             }
         }
 
-        return MinMaxResult{.value=alpha, .depth=depth, .bestMove=best.bestMove};
-    }
-
-    MinMaxResult quiescenseSearchOld(int depth, int alpha, int beta, Color c) {
-        uint64_t hash = board.hash();
-        int boardValue = evaluateBoard(board, depth);
-
-        if (c == Color::WHITE) {
-            if (boardValue >= beta) {
-                return MinMaxResult {.value=beta, .depth=depth};
-            }
-            if (boardValue > alpha) {
-                alpha = boardValue;
-            }
-        } else {
-            if (boardValue <= alpha) {
-                return MinMaxResult {.value=alpha, .depth=depth};
-            }
-            if (boardValue < beta) {
-                beta = boardValue;
-            }
-        }
-
-        if (transpositionTable.find(hash) != transpositionTable.end()) {
-            TTEntry entry = transpositionTable[hash];
-            if (entry.flag == NodeType::EXACT) {
-                return MinMaxResult{.value=entry.score, .depth=depth, .bestMove=entry.bestMove};
-            } else if (entry.flag == NodeType::LOWERBOUND) {
-                alpha = std::max(alpha, entry.score);
-            } else if (entry.flag == NodeType::UPPERBOUND) {
-                beta = std::min(beta, entry.score);
-            }
-            if (alpha >= beta) {
-                return MinMaxResult{.value=entry.score, .depth=depth, .bestMove=entry.bestMove};
-            }
-        }
-
-        Movelist moves = getSortedCapture(board, historyCutoffTable);
-        MinMaxResult best{.value=(c==Color::WHITE?Value::NEG_INFINITY: Value::INFINITY), .depth=0};
-        for (const Move& move: moves) {
-            board.makeMove(move);
-            MinMaxResult possBest = quiescenseSearch(depth-1, alpha, beta, ~c);
-            board.unmakeMove(move);
-            
-            if (c == Color::WHITE) {
-                if (possBest.value >= beta) {
-                    return MinMaxResult {.value=beta, .depth=depth};
-                }
-                if (possBest.value > alpha) {
-                    alpha = possBest.value;
-                }
-            } else {
-                if (possBest.value <= alpha) {
-                    return MinMaxResult {.value=alpha, .depth=depth};
-                }
-                if (possBest.value < beta) {
-                    beta = possBest.value;
-                }
-            }
-        }
-
-        TTEntry entry{.score=best.value, .depth=best.depth, .bestMove=best.bestMove};
-        if (c == Color::WHITE) {
+        if (best.value != Value::NEG_INFINITY) {
+            TTEntry entry{.score=best.value, .depth=best.depth, .bestMove=best.bestMove};
             if (best.value <= alpha) {
                 entry.flag = NodeType::UPPERBOUND;
             } else if (best.value >= beta) {
@@ -370,26 +242,17 @@ public:
             } else {
                 entry.flag = NodeType::EXACT;
             }
-        } else {
-            if (best.value >= beta) {
-                entry.flag = NodeType::UPPERBOUND;
-            } else if (best.value <= alpha) {
-                entry.flag = NodeType::LOWERBOUND;
-            } else {
-                entry.flag = NodeType::EXACT;
-            }
         }
-        transpositionTable[hash] = entry;
 
-        int tmpDepth;
+        int tempDepth;
         if (best.value == Value::NEG_INFINITY) {
-            tmpDepth = depth;
+            tempDepth = 0;
         } else {
-            tmpDepth = best.depth;
+            tempDepth = best.depth;
         }
-        return MinMaxResult{.value=alpha, .depth=tmpDepth};
-    }
 
+        return MinMaxResult{.value=alpha, .depth=tempDepth, .bestMove=best.bestMove};
+    }
 };
 
 
@@ -409,49 +272,50 @@ extern "C" void freeMemory(char* str) {
     delete[] str;
 }
 
+// TODO: Update cutoff table everywhere where cutoff
 int main() {
     Bot* bot = createBot();
-    // 
-    const char* move = getBestMove(bot, "8/8/2R5/2P5/5PP1/4k3/8/7K w - - 1 102");
+    const char *move;
+
+    //
+    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 14 47");
     std::cout << move << std::endl;
     freeMemory((char*)move);
 
     // 
-    move = getBestMove(bot, "8/8/2R5/2P2P2/5kP1/8/8/7K w - - 1 103");
+    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 16 48");
     std::cout << move << std::endl;
     freeMemory((char*)move);
 
-    // // 
-    // move = getBestMove(bot, "8/5R2/2p1k3/2P5/8/4B3/5PP1/6K1 w - - 62 105");
-    // std::cout << move << std::endl;
-    // freeMemory((char*)move);
+    //
+    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 18 49");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-    // // 
-    // move = getBestMove(bot, "8/6R1/2p5/2P1k3/8/4B3/5PP1/6K1 w - - 64 106");
-    // std::cout << move << std::endl;
-    // freeMemory((char*)move);
+    // 
+    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 20 50");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-    // //
-    // move = getBestMove(bot, "8/5R2/2p1k3/2P5/8/4B3/5PP1/6K1 w - - 66 107");
-    // std::cout << move << std::endl;
-    // freeMemory((char*)move);
+    //
+    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 22 51");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-    // //
-    // move = getBestMove(bot, "8/6R1/2p5/2P1k3/8/4B3/5PP1/6K1 w - - 68 108");
-    // std::cout << move << std::endl;
-    // freeMemory((char*)move);
+    // 
+    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 24 52");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-    // //
-    // move = getBestMove(bot, "8/5R2/2p1k3/2P5/8/4B3/5PP1/6K1 w - - 70 109");
-    // std::cout << move << std::endl;
-    // freeMemory((char*)move);
+    //
+    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 26 53");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-    // // 
-    // move = getBestMove(bot, "8/2R5/2p5/2P1k3/8/4B3/5PP1/6K1 w - - 72 110");
-    // std::cout << move << std::endl;
-    // freeMemory((char*)move);
-
-
+    // 
+    move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 28 54");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
     deleteBot(bot);
     return 0;

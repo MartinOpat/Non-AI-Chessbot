@@ -36,7 +36,8 @@ class MainWindow(QWidget):
 
 
 
-board = chess.Board()
+board = chess.Board("8/6p1/7p/3kp2P/8/8/4rPP1/R5K1 w - - 12 46")
+
 app = QApplication([])
 mw = MainWindow(board)
 mw.show()

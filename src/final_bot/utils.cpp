@@ -59,13 +59,21 @@ bool isDraw(const Board& board) {
     }
 
     // Draw by threefold repetition
-    if (board.isRepetition(1)) {
+    if (board.isRepetition()) {
+        if (board.getFen() == "8/R5p1/7p/3kp2P/8/8/4rPP1/6K1 b - - 29 54") {
+            std::cout << "From draw fen" << std::endl;
+        }
         return true;
     }
 
     // Draw by 50-move rule
     if (board.isHalfMoveDraw()) {
         return board.getHalfMoveDrawType().first == GameResultReason::FIFTY_MOVE_RULE;
+    }
+
+    GameResultReason grr = board.isGameOver().first;
+    if (grr == GameResultReason::STALEMATE) {
+        return true;
     }
 
     return false;
