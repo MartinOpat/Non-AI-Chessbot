@@ -122,7 +122,7 @@ int pushToEdge(Square s) {
 int pushToCorner(Square s, Color c) {
     int cornerDistance = manhattanCornerDistance(s, c);
     // Score increases as the piece gets closer to the corner
-    return (7-cornerDistance) * 100; // Score multiplier is arbitrary, adjust as needed
+    return (7-cornerDistance) * 500; // Score multiplier is arbitrary, adjust as needed
 }
 
 int pushClose(Square a, Square b) {

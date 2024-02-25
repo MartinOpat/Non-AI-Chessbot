@@ -176,7 +176,7 @@ public:
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime);
             int m = (c == Color::WHITE ? 1 : -1);
 
-            if (4*duration < maxTime) {
+            if (isEndgame or 4*duration < maxTime) {
                 return quiescenseSearch(maxQuiescenceDepth, alpha, beta, c);
             }
             return MinMaxResult{.value=m*evaluateBoard(board, depth), .depth=depth};
@@ -301,51 +301,51 @@ extern "C" void freeMemory(char* str) {
     delete[] str;
 }
 
-// // TODO: Update cutoff table everywhere where cutoff
-// int main() {
-//     Bot* bot = createBot();
-//     const char *move;
+// TODO: Update cutoff table everywhere where cutoff
+int main() {
+    Bot* bot = createBot();
+    const char *move;
 
-//     //
-//     move = getBestMove(bot, "r1b2rk1/1ppq1p1p/p1n2bp1/4p3/2B1P3/2P2N2/PPN1QPPP/R3K2R");
-//     std::cout << move << std::endl;
-//     freeMemory((char*)move);
+    //
+    move = getBestMove(bot, "8/8/3K4/5k2/5n2/5b2/8/8 w - - 0 1");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-//     // // 
-//     // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 16 48");
-//     // std::cout << move << std::endl;
-//     // freeMemory((char*)move);
+    // 
+    move = getBestMove(bot, "8/8/4n3/2K2k2/8/5b2/8/8 w - - 2 2");
+    std::cout << move << std::endl;
+    freeMemory((char*)move);
 
-//     // //
-//     // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 18 49");
-//     // std::cout << move << std::endl;
-//     // freeMemory((char*)move);
+    // //
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 18 49");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-//     // // 
-//     // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 20 50");
-//     // std::cout << move << std::endl;
-//     // freeMemory((char*)move);
+    // // 
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 20 50");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-//     // //
-//     // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 22 51");
-//     // std::cout << move << std::endl;
-//     // freeMemory((char*)move);
+    // //
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 22 51");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-//     // // 
-//     // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 24 52");
-//     // std::cout << move << std::endl;
-//     // freeMemory((char*)move);
+    // // 
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 24 52");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-//     // //
-//     // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 26 53");
-//     // std::cout << move << std::endl;
-//     // freeMemory((char*)move);
+    // //
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/5PP1/4r1K1 w - - 26 53");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-//     // // 
-//     // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 28 54");
-//     // std::cout << move << std::endl;
-//     // freeMemory((char*)move);
+    // // 
+    // move = getBestMove(bot, "8/R5p1/7p/3kp2P/8/8/4rPPK/8 w - - 28 54");
+    // std::cout << move << std::endl;
+    // freeMemory((char*)move);
 
-//     deleteBot(bot);
-//     return 0;
-// }
+    deleteBot(bot);
+    return 0;
+}

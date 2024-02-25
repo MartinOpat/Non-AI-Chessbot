@@ -36,7 +36,7 @@ class MainWindow(QWidget):
 
 
 
-board = chess.Board("rnbqkbnr/pppppppp/8/8/8/1P6/P1PPPPPP/RNBQKBNR b KQkq - 0 1")
+board = chess.Board("8/8/3K4/5k2/5n2/5b2/8/8 w - - 0 1")
 # board = chess.Board()
 
 app = QApplication([])
@@ -57,7 +57,7 @@ while not board.is_game_over(claim_draw=False):
         print(board.fen())
         # white
         start_time = time.time()
-        move = blackBot.__call__(board.fen())
+        move = whiteBot.__call__(board.fen())
         end_time = time.time()
         white_time += end_time - start_time
         board.push(move)
@@ -72,7 +72,7 @@ while not board.is_game_over(claim_draw=False):
         print(board.fen())
         # black
         start_time = time.time()
-        move = whiteBot.__call__(board.fen())
+        move = blackBot.__call__(board.fen())
         end_time = time.time()
         black_time += end_time - start_time
         board.push(move)

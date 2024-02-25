@@ -29,6 +29,7 @@ int evaluateKBNK(const Board& board, Color strongSide) {
     Square weakKing = Square(board.pieces(PieceType::KING, ~strongSide).lsb());
     Square bishop = Square(board.pieces(PieceType::BISHOP, strongSide).lsb());
 
+
     int score = pushClose(strongKing, weakKing);
     if (isSquareWhite(bishop)) {
         score += pushToCorner(weakKing, Color::WHITE); 
@@ -225,7 +226,7 @@ int evaluateEndgames(const Board& board) {
 
     int whiteBalance = evaluateMaterial(board, Color::WHITE, true);
     int blackBalance = evaluateMaterial(board, Color::BLACK, true);
-    Color strongSide = whiteBalance > blackBalance ? Color::WHITE : Color::BLACK;
+    Color strongSide = abs(whiteBalance) > abs(blackBalance) ? Color::WHITE : Color::BLACK;
 
     EndgameType::Type endgameType = detectEndgameType(board);
     switch (endgameType) {
