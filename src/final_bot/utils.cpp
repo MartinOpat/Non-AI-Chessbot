@@ -2,6 +2,10 @@
 
 using namespace chess;
 
+bool isSquareWhite(Square sq) {
+    return (sq.rank() + sq.file()) % 2;
+}
+
 Square flipSquare(Square sq) {
     // Calculate the rank (0-7) and file (0-7) of the square.
     int rank = sq.rank();
@@ -14,21 +18,13 @@ Square flipSquare(Square sq) {
     return Square(flippedRank * 8 + file);
 }
 
-bool isLightSquared(Square sq) {
-    return (sq.rank() + sq.file()) % 2 == 0;
-}
-
-int manhattanDistance(Square a, Square b) {
-    int fileDiff = abs((a.file()) - (b.file()));
-    int rankDiff = abs((a.rank()) - (b.rank()));
-    return fileDiff + rankDiff; // Manhattan distance
-}
-
 // Distance to the closest corner (a1, h1, a8, h8)
-int manhattanCornerDistance(Square s) {
-    int rank = s.rank(); 
-    int file = s.file(); 
-    return std::min({rank+file, rank+7-file, file+7-rank, 14-file-rank});
+int manhattanCornerDistance(Square s, Color c) {
+    if (c == Color::WHITE) {
+        return std::min({Square::distance(s, Square::underlying::SQ_H1), Square::distance(s, Square::underlying::SQ_A8)});
+    } else {
+        return std::min({Square::distance(s, Square::underlying::SQ_H8), Square::distance(s, Square::underlying::SQ_A1)});
+    }
 }
 
 int manhattanEdgeDistance(Square s) {
@@ -77,7 +73,7 @@ bool isDraw(const Board& board) {
 }
 
 bool controlsCorner(Square bishop, Square corner) {
-    return isLightSquared(bishop) == isLightSquared(corner);
+    return isSquareWhite(bishop) == isSquareWhite(corner);
 }
 
 std::string moveToString(const chess::Move& move) {

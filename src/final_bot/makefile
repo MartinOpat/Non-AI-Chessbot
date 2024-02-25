@@ -2,7 +2,7 @@
 CC = g++
 
 # Compiler flags
-CFLAGS = -Wall -Os -fPIC  # Add -fPIC here for position-independent code
+CFLAGS = -Wall -Os -fPIC # Add -fPIC here for position-independent code
 
 # Source files
 SRCS = bot.cpp endgames.cpp eval.cpp movegen.cpp openings.cpp utils.cpp

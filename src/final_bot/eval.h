@@ -12,7 +12,7 @@ int evaluateMaterial(const Board& board, Color color, bool isEndgame);
 int evaluateKingSafety(const Board& board, Color kingColor);
 int controlCornerWeakKing(Square bishop1, Square bishop2, Square weakKing);
 int pushToEdge(Square s);
-int pushToCorner(Square s);
+int pushToCorner(Square s, Color c);
 int pushClose(Square a, Square b);
 int pushAway(Square a, Square b);
 

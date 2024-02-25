@@ -119,22 +119,21 @@ int pushToEdge(Square s) {
     return (7 - edgeDistance) * 10; // Scale as needed
 }
 
-int pushToCorner(Square s) {
-    int cornerDistance = manhattanCornerDistance(s);
-
+int pushToCorner(Square s, Color c) {
+    int cornerDistance = manhattanCornerDistance(s, c);
     // Score increases as the piece gets closer to the corner
-    return (7 - cornerDistance) * 15; // Score multiplier is arbitrary, adjust as needed
+    return (7-cornerDistance) * 100; // Score multiplier is arbitrary, adjust as needed
 }
 
 int pushClose(Square a, Square b) {
-    int distance = manhattanDistance(a, b);
+    int distance = Square::distance(a, b);
 
     // Decrease score as distance increases
     return (14 - distance) * 10; // Scale as needed
 }
 
 int pushAway(Square a, Square b) {
-    int distance = manhattanDistance(a, b);
+    int distance = Square::distance(a, b);
 
     // Increase score as distance increases
     return distance * 10; // Scale as needed

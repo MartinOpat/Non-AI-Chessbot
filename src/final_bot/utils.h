@@ -35,10 +35,9 @@ struct MinMaxResult {
 
 using namespace chess;
 
+bool isSquareWhite(Square sq);
 Square flipSquare(Square sq);
-bool isLightSquared(Square sq);
-int manhattanDistance(Square a, Square b);
-int manhattanCornerDistance(Square s);
+int manhattanCornerDistance(Square s, Color c);
 int manhattanEdgeDistance(Square s);
 bool canPromote(const Board& board, Color side, Square pawnSquare);
 bool isDraw(const Board& board);
