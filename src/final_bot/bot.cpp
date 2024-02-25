@@ -29,7 +29,8 @@ public:
         isOpening = true;
         isEndgame = false;
 
-        openingBook = loadOpeningsFromFile("better_filtered_openings.pgn");
+        // openingBook = loadOpeningsFromFile("better_filtered_openings.pgn");
+        openingBook = loadOpeningsFromString(OPENINGS_BOOK_STRING);
         historyCutoffTable = {0};
 
         board = Board();
@@ -46,13 +47,11 @@ public:
 
         auto grr = board.isGameOver().first;
         if (grr == GameResultReason::CHECKMATE) {
-            // std::cout << "I can detect checkmates" << std::endl;
             return (board.sideToMove() == Color::WHITE) ? -Value::MATE-depth : Value::MATE+depth;
         }
 
         int score = 0;
         if (isEndgame) {
-            std::cout << "How did we get here?" << std::endl;
             score = evaluateEndgames(board);
         } else {
             score += evaluateMaterialAndPosition(board, Color::WHITE, false);
@@ -83,7 +82,7 @@ public:
             isEndgame = true;
         }
 
-        std::cout << fen << " " << board.getFen() << std::endl;
+        // std::cout << fen << " " << board.getFen() << std::endl;
         if (fen != startFen) 
             updateBoard(fen);
 
@@ -122,7 +121,7 @@ public:
         MinMaxResult bestMove;
         while (depth <= maxDepth) {
             bestMove = alphaBeta(depth, -Value::MATE, Value::MATE, c);
-            std::cout << "Depth: " << depth << " Score: " << bestMove.value << " Best Move: " << moveToString(bestMove.bestMove) << std::endl;
+            // std::cout << "Depth: " << depth << " Score: " << bestMove.value << " Best Move: " << moveToString(bestMove.bestMove) << std::endl;
             depth++;
         }
         return bestMove;
@@ -165,7 +164,7 @@ public:
             possBest.value = -possBest.value;
             possBest.bestMove = move;
             board.unmakeMove(move);
-            
+
             if (possBest.value > best.value) {
                 best = possBest;
             }
@@ -409,32 +408,32 @@ extern "C" void freeMemory(char* str) {
     delete[] str;
 }
 
-int main() {
-    Bot* bot = createBot();
-    // 
-    // 3r2kr/1p3ppp/8/1p1P4/1P2R3/8/P5PP/R5K1 b - - 1 26
-    const char* move = getBestMove(bot, "6kr/1p3ppp/8/1p1r4/1P2R3/8/P5PP/R5K1 w - - 0 27");
-    std::cout << move << std::endl;
+// int main() {
+//     Bot* bot = createBot();
+//     // 
+//     // 3r2kr/1p3ppp/8/1p1P4/1P2R3/8/P5PP/R5K1 b - - 1 26
+//     const char* move = getBestMove(bot, "6kr/1p3ppp/8/1p1r4/1P2R3/8/P5PP/R5K1 w - - 0 27");
+//     std::cout << move << std::endl;
 
-    // int black = evaluateMaterialAndPosition(Board("r1N2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 b - - 0 17"), Color::BLACK, false);
-    // int white = evaluateMaterialAndPosition(Board("r1N2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 b - - 0 17"), Color::WHITE, false);
-    // int valBefore = black + white;
-    // std::cout << "black: " << black << " white: " << white << std::endl;
+//     // int black = evaluateMaterialAndPosition(Board("r1N2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 b - - 0 17"), Color::BLACK, false);
+//     // int white = evaluateMaterialAndPosition(Board("r1N2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 b - - 0 17"), Color::WHITE, false);
+//     // int valBefore = black + white;
+//     // std::cout << "black: " << black << " white: " << white << std::endl;
         
-    // std::cout << valBefore << std::endl;
+//     // std::cout << valBefore << std::endl;
 
-    // int valAfter = evaluateMaterialAndPosition(Board("1rN2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 1 18"), Color::WHITE, false) + 
-    //     evaluateMaterialAndPosition(Board("1rN2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 1 18"), Color::BLACK, false);
-    // std::cout << valAfter << std::endl;
+//     // int valAfter = evaluateMaterialAndPosition(Board("1rN2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 1 18"), Color::WHITE, false) + 
+//     //     evaluateMaterialAndPosition(Board("1rN2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 1 18"), Color::BLACK, false);
+//     // std::cout << valAfter << std::endl;
 
 
-    // int valBest = evaluateMaterialAndPosition(Board("2r2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 0 18"), Color::WHITE, false) + 
-    //     evaluateMaterialAndPosition(Board("2r2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 0 18"), Color::BLACK, false);
-    // std::cout << valBest << std::endl;
+//     // int valBest = evaluateMaterialAndPosition(Board("2r2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 0 18"), Color::WHITE, false) + 
+//     //     evaluateMaterialAndPosition(Board("2r2k1r/1p3ppp/p4n2/4p3/1P2n3/4P3/P3BPPP/RN3RK1 w - - 0 18"), Color::BLACK, false);
+//     // std::cout << valBest << std::endl;
     
 
 
-    freeMemory((char*)move);
-    deleteBot(bot);
-    return 0;
-}
+//     freeMemory((char*)move);
+//     deleteBot(bot);
+//     return 0;
+// }
